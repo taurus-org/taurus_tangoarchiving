@@ -27,17 +27,16 @@
 
 __docformat__ = 'restructuredtext'
 
-
+import PyTango
 from taurus.external import unittest
 from taurus.core.test import (valid, invalid, names,
                               AbstractNameValidatorTestCase)
-from taurus.core.archiving.archivingvalidator import \
-                                (ArchivingAuthorityNameValidator,
-                                 ArchivingDeviceNameValidator,
-                                 ArchivingAttributeNameValidator)
+from archiving.archivingvalidator import (ArchivingAuthorityNameValidator,
+                                          ArchivingDeviceNameValidator,
+                                          ArchivingAttributeNameValidator)
 from taurus import tauruscustomsettings
 
-import PyTango
+
 __GETENV = PyTango.ApiUtil.get_env_var
 _FIRST = getattr(tauruscustomsettings, 'ARCHIVING_FIRST_ELEM', "-1d")
 _LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', "now")

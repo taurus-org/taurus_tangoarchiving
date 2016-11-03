@@ -26,18 +26,15 @@ __all__ = ["ArchivingDevice"]
 
 from PyTangoArchiving import Reader
 from taurus.core.taurusdevice import TaurusDevice
-from taurus.core.archiving.archivingvalidator import \
-    ArchivingDeviceNameValidator
+from archivingvalidator import ArchivingDeviceNameValidator
 
 class ArchivingDevice(TaurusDevice):
     """Archiving device object. """
-    # helper class property that stores a reference to the corresponding factory
-    _factory = None
     _scheme = 'archiving'
     _description = "A Archiving Device"
 
-    def __init__(self, name, **kw):
-        self.call__init__(TaurusDevice, name, **kw)
+    def __init__(self, name, **kwargs):
+        TaurusDevice.__init__(self, name, **kwargs)
         self._validator = ArchivingDeviceNameValidator()
         g = self._validator.getUriGroups(self.getFullName())
         db = g.get('devname')

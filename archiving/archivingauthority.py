@@ -36,15 +36,13 @@ class ArchivingAuthority(TaurusAuthority):
     Archiving authority class for Archiving
     '''
 
-    # helper class property that stores a reference to the corresponding factory
-    _factory = None
     _scheme = 'archiving'
 
     def __init__(self, name=None, parent=None):
         if name is None:
             name = '%s://%s' %(self._scheme,
                                PyTango.ApiUtil.get_env_var("TANGO_HOST"))
-        self.call__init__(TaurusAuthority, name, parent)
+        TaurusAuthority.__init__(self, name, parent)
         v = ArchivingAuthorityNameValidator()
         groups = v.getUriGroups(name)
         if groups is None:

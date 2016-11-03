@@ -35,8 +35,7 @@ from taurus.core.taurusbasetypes import (TaurusEventType,
                                          TaurusAttrValue,
                                          TaurusTimeVal,
                                          DataFormat, DataType)
-from taurus.core.archiving.archivingvalidator import \
-    ArchivingAttributeNameValidator
+from archivingvalidator import ArchivingAttributeNameValidator
 
 
 
@@ -50,8 +49,6 @@ class ArchivingAttribute(TaurusAttribute):
                  Instead it should be done via the :meth:`ArchivingFactory.getAttribute`
     '''
 
-    # helper class property that stores a reference to the corresponding factory
-    _factory = None
     _scheme = 'archiving'
      # Archiving reading limited to last 10 years. #TODO verify
     _EPOCH = time.time()-10*365*24*3600
@@ -83,12 +80,6 @@ class ArchivingAttribute(TaurusAttribute):
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
     # Necessary to overwrite
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
-    def isNumeric(self):
-        return self.type in [DataType.Float, DataType.Integer]
-
-    def isState(self):
-        return self.type is DataType.DevState
-
     def encode(self, value):
         return value
 
