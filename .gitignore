@@ -4,3 +4,4 @@ MANIFEST
 /build/
 /setup.cfg
 /*.egg-info
+.idea/
