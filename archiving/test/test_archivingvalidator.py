@@ -29,7 +29,7 @@ __docformat__ = 'restructuredtext'
 
 import socket
 import PyTango
-from taurus.external import unittest
+import unittest
 from taurus.core.test import (valid, invalid, names,
                               AbstractNameValidatorTestCase)
 from archiving.archivingvalidator import (ArchivingAuthorityNameValidator,

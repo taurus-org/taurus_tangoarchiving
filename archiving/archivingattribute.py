@@ -28,7 +28,7 @@ __all__ = ["ArchivingAttribute"]
 import time
 import datetime
 
-from taurus.external.pint import Q_
+from taurus.core.units import Q_
 from taurus.core.taurusattribute import TaurusAttribute
 from taurus.core.taurusexception import TaurusException
 from taurus.core.taurusbasetypes import (TaurusEventType,
