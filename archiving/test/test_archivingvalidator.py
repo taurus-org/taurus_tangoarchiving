@@ -27,6 +27,7 @@
 
 __docformat__ = 'restructuredtext'
 
+import socket
 import PyTango
 from taurus.external import unittest
 from taurus.core.test import (valid, invalid, names,
@@ -37,7 +38,10 @@ from archiving.archivingvalidator import (ArchivingAuthorityNameValidator,
 from taurus import tauruscustomsettings
 
 
-__GETENV = PyTango.ApiUtil.get_env_var
+__PY_TANGO_HOST = PyTango.ApiUtil.get_env_var("TANGO_HOST")
+host, port = __PY_TANGO_HOST.split(':')
+__TANGO_HOST = "{0}:{1}".format(socket.getfqdn(host), port)
+
 _FIRST = getattr(tauruscustomsettings, 'ARCHIVING_FIRST_ELEM', "-1d")
 _LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', "now")
 
@@ -45,6 +49,7 @@ _LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', "now")
 # Tests for Archiving Authority name validation
 #=========================================================================
 @valid(name='archiving://foo:10000')
+@valid(name='archiving://foo.domain.name:10000')
 @invalid(name='archiving:foo')
 @invalid(name='archiving:foo:10000')
 @invalid(name='archiving://foo:10000/')
@@ -80,7 +85,7 @@ class ArchivingAuthValidatorTestCase(AbstractNameValidatorTestCase,
 @invalid(name='archiving:foo')
 @invalid(name='archiving:tdbpp#')
 @names(name='archiving:?db=hdb',
-       out=('archiving://%s?db=hdb' % __GETENV("TANGO_HOST"), '?db=hdb', 'hdb'))
+       out=('archiving://%s?db=hdb' % __TANGO_HOST, '?db=hdb', 'hdb'))
 @names(name='archiving://foo:1234?db=hdb',
        out=('archiving://foo:1234?db=hdb', '//foo:1234?db=hdb', 'hdb'))
 class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
@@ -119,7 +124,7 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
             'a/b/c/d'))
 @names(name='archiving:/a/b/c/d?db=rad2s',
        out=('archiving://%s/a/b/c/d?db=rad2s;t0=%s;t1=%s' %\
-            (__GETENV("TANGO_HOST"), _FIRST, _LAST),
+            (__TANGO_HOST, _FIRST, _LAST),
             '/a/b/c/d?db=rad2s', 'a/b/c/d'))
 @names(name='archiving://foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22T00:00:00',
        out=('archiving://foo:1234/a/b/c/d?db=rad10s;' +
@@ -139,7 +144,7 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
 
 @names(name='archiving:/a/b/c/d?db=tdb?t0=-0.5d#label',
        out=('archiving://%s/a/b/c/d?db=tdb;t0=-0.5d;t1=%s' %\
-            (__GETENV("TANGO_HOST"), _LAST),
+            (__TANGO_HOST, _LAST),
             '/a/b/c/d?db=tdb;t0=-0.5d', 'a/b/c/d', 'label'))
 class ArchivingAttrValidatorTestCase(AbstractNameValidatorTestCase,
                                  unittest.TestCase):
