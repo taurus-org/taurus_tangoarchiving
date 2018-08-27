@@ -26,6 +26,8 @@
 __all__ = ["ArchivingAuthorityNameValidator", "ArchivingDeviceNameValidator", 
            "ArchivingAttributeNameValidator"]
 
+import taurus
+import socket
 import PyTango
 from taurus.core.taurusvalidator import (TaurusAttributeNameValidator,
                                          TaurusDeviceNameValidator)
@@ -71,7 +73,14 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
         if groups is None:
             return None
 
-        default_authority = '//' + PyTango.ApiUtil.get_env_var('TANGO_HOST')
+        default_authority = taurus.Factory("tango").get_default_tango_host()
+
+        if default_authority is None:
+            import PyTango
+            host, port = PyTango.ApiUtil.get_env_var('TANGO_HOST').split(":")
+            # Get the fully qualified domain name
+            host = socket.getfqdn(host)
+            default_authority = "//{0}:{1}".format(host, port)
 
         authority = groups.get('authority')
         if authority is None:

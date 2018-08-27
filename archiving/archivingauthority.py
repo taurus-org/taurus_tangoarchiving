@@ -25,6 +25,8 @@
 
 __all__ = ["ArchivingAuthority"]
 
+import taurus
+import socket
 import PyTango
 from taurus.core.taurusauthority import TaurusAuthority
 from taurus.core.taurusexception import TaurusException
@@ -40,8 +42,17 @@ class ArchivingAuthority(TaurusAuthority):
 
     def __init__(self, name=None, parent=None):
         if name is None:
-            name = '%s://%s' %(self._scheme,
-                               PyTango.ApiUtil.get_env_var("TANGO_HOST"))
+            t_f = taurus.Factory('tango')
+            t_default_authority = t_f.get_default_tango_host()
+
+            if t_default_authority is None:
+                pytango_host = PyTango.ApiUtil.get_env_var("TANGO_HOST")
+                host, port = pytango_host.split(':')
+                t_default_authority = "//{0}:{1}".format(socket.getfqdn(host),
+                                                         port)
+
+            name = '%s:%s' %(self._scheme, t_default_authority)
+
         TaurusAuthority.__init__(self, name, parent)
         v = ArchivingAuthorityNameValidator()
         groups = v.getUriGroups(name)
