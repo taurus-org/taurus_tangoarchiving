@@ -66,6 +66,7 @@ class ArchivingAuthValidatorTestCase(AbstractNameValidatorTestCase,
 # Tests for Archiving Device name validation
 #=========================================================================
 @valid(name='archiving:?db=hdb', groups={'devname': 'hdb'})
+@valid(name='archiving:?db=hdbpp', groups={'devname': 'hdbpp'})
 @valid(name='archiving:?db=tdb', groups={'devname': 'tdb'})
 @valid(name='archiving:?db=tdbpp', groups={'devname': 'tdbpp'})
 @valid(name='archiving:?db=rad2s', groups={'devname': 'rad2s'})

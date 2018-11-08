@@ -37,7 +37,7 @@ class ArchivingDevice(TaurusDevice):
         TaurusDevice.__init__(self, name, **kwargs)
         self._validator = ArchivingDeviceNameValidator()
         g = self._validator.getUriGroups(self.getFullName())
-        db = g.get('devname')
+        db = g.get('arch_db', '*')
         tango_host = '%s:%s' % (g.get('host'), g.get('port'))
         self._reader = Reader(db, tango_host=tango_host, logger=self)
 

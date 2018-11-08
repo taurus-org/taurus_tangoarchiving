@@ -63,7 +63,7 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     scheme = 'archiving'
     authority = ArchivingAuthorityNameValidator.authority
     path = r''
-    query = r'db(=(?P<devname>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp)))?'
+    query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp)))?'
     fragment = '(?!)'
 
     def getNames(self, fullname, factory=None):
@@ -86,15 +86,15 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
         if authority is None:
             groups['authority'] = authority = default_authority
 
-        complete = self.scheme + ':%(authority)s?db=%(devname)s' % groups
+        complete = self.scheme + ':%(authority)s?db=%(arch_db)s' % groups
 
         if authority.lower() == default_authority.lower():
-            normal = '?db=%(devname)s' % groups
+            normal = '?db=%(arch_db)s' % groups
         else:
-            normal = '%(authority)s?db=%(devname)s' % groups
-        short = '%(devname)s' % groups
+            normal = '%(authority)s?db=%(arch_db)s' % groups
+        short = '%(arch_db)s' % groups
         return complete, normal, short
- 
+
 
 class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
     """Validator for Archiving attribute names. Apart from the standard named
@@ -132,7 +132,7 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
         port = groups.get('port')
         if authority is None:
             default_auth = True
-            groups['authority'] =  '//' + tango_host
+            groups['authority'] = '//' + tango_host
             host, port = tango_host.split(':')
 
         query = groups['query']
@@ -175,3 +175,11 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
             return complete, normal, short, key
 
         return complete, normal, short
+
+    def getUriGroups(self, name, strict=None):
+        groups = TaurusAttributeNameValidator.getUriGroups(self, name, strict)
+        if groups is not None:
+            if groups.get('arch_db', None) is not None:
+                # add devname to the groups
+                groups['devname'] = '?db={arch_db}'.format(**groups)
+        return groups
