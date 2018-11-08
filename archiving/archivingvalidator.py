@@ -63,7 +63,7 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     scheme = 'archiving'
     authority = ArchivingAuthorityNameValidator.authority
     path = r''
-    query = r'db(=(?P<devname>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap)))?'
+    query = r'db(=(?P<devname>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp)))?'
     fragment = '(?!)'
 
     def getNames(self, fullname, factory=None):
