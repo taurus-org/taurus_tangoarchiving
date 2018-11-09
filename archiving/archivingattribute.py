@@ -60,13 +60,15 @@ class ArchivingAttribute(TaurusAttribute):
         groups = self._validator.getUriGroups(name)
         self._star_date = self._EPOCH
         self._end_date = None
-        _time = groups.get('query', None)
-        if _time is not None and _time.startswith('time='):
-            _time = _time[5:]
-            dates = _time.split(',')
-            self._star_date = dates[0]
-            if len(dates) == 2:
-                self._end_date = dates[1]
+        query = groups.get('query', None)
+        if query is not None:
+            for query_elem in query.split(';'):
+                if 't0=' in query_elem:
+                    self._star_date = query_elem[3:]
+                if 't1=' in query_elem:
+                    self._end_date = query_elem[3:]
+                    if self._end_date == 'now':
+                        self._end_date = time.time()
         self._value = TaurusAttrValue()
         # TODO: do it from reader
         self.type = DataType.Float
@@ -75,7 +77,7 @@ class ArchivingAttribute(TaurusAttribute):
         self._tg_attr_name = groups.get('attrname')
         self._label = self._tg_attr_name + '(archiving)'
         # activate polling
-        # self._activatePolling() #TODO ?
+        self._activatePolling() # TODO: Need it for ploting. It is a bug?
 
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
     # Necessary to overwrite
@@ -98,8 +100,8 @@ class ArchivingAttribute(TaurusAttribute):
             self._value.rvalue = Q_(values)
             self._value.time = times
             # TODO
-            # if self._end_date is not None:
-            #     self._deactivatePolling()
+            if self._end_date is not None:
+                self._deactivatePolling()
         else:
             self._value.rvalue = []
             self._value.time = TaurusTimeVal().now() #TODO ?
@@ -110,8 +112,6 @@ class ArchivingAttribute(TaurusAttribute):
         v = self.read(cache=False)
         if len(v.rvalue) > 0:
             self.fireEvent(TaurusEventType.Periodic, v)
-        # i = datetime.datetime.now()
-        # self._star_date = "%s" % i
 
     def _subscribeEvents(self):
         pass

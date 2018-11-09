@@ -48,6 +48,7 @@ _LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', "now")
 #=========================================================================
 # Tests for Archiving Authority name validation
 #=========================================================================
+@valid(name='//foo:10000')
 @valid(name='archiving://foo:10000')
 @valid(name='archiving://foo.domain.name:10000')
 @invalid(name='archiving:foo')
@@ -65,14 +66,15 @@ class ArchivingAuthValidatorTestCase(AbstractNameValidatorTestCase,
 #=========================================================================
 # Tests for Archiving Device name validation
 #=========================================================================
-@valid(name='archiving:?db=hdb', groups={'devname': 'hdb'})
-@valid(name='archiving:?db=hdbpp', groups={'devname': 'hdbpp'})
-@valid(name='archiving:?db=tdb', groups={'devname': 'tdb'})
-@valid(name='archiving:?db=tdbpp', groups={'devname': 'tdbpp'})
-@valid(name='archiving:?db=rad2s', groups={'devname': 'rad2s'})
-@valid(name='archiving:?db=snap', groups={'devname': 'snap'})
-@valid(name='archiving://foo:10000?db=snap', groups={'devname': 'snap'})
+@valid(name='archiving:?db=hdb', groups={'arch_db': 'hdb'})
+@valid(name='archiving:?db=hdbpp', groups={'arch_db': 'hdbpp'})
+@valid(name='archiving:?db=tdb', groups={'arch_db': 'tdb'})
+@valid(name='archiving:?db=tdbpp', groups={'arch_db': 'tdbpp'})
+@valid(name='archiving:?db=rad2s', groups={'arch_db': 'rad2s'})
+@valid(name='archiving:?db=snap', groups={'arch_db': 'snap'})
+@valid(name='archiving://foo:10000?db=snap', groups={'arch_db': 'snap'})
 ## default db...
+@valid(name='?db=hdb')
 @valid(name='archiving:?db')
 @valid(name='archiving://foo:10000?db')
 ##
