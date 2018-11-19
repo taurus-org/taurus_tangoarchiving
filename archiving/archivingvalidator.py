@@ -26,9 +26,12 @@
 __all__ = ["ArchivingAuthorityNameValidator", "ArchivingDeviceNameValidator", 
            "ArchivingAttributeNameValidator"]
 
+import time
 import taurus
 import socket
 import PyTango
+from fandango.functional import str2time
+
 from taurus.core.taurusvalidator import (TaurusAttributeNameValidator,
                                          TaurusDeviceNameValidator)
 from taurus.core.tango.tangovalidator import TangoAuthorityNameValidator
@@ -36,7 +39,15 @@ from taurus import tauruscustomsettings
 
 
 _FIRST = getattr(tauruscustomsettings, 'ARCHIVING_FIRST_ELEM', "-1d")
-_LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', "now")
+_LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', time.time())
+
+def str2epoch(str_time):
+    try:
+        v = float(str_time)
+    except ValueError:
+        v = time.time() + str2time(str_time)
+    return v
+
 
 class ArchivingAuthorityNameValidator(TangoAuthorityNameValidator):
     """Validator for Archiving authority names. Apart from the standard named
@@ -63,7 +74,7 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     scheme = 'archiving'
     authority = ArchivingAuthorityNameValidator.authority
     path = r''
-    query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp)))?'
+    query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp|\*)))?'
     fragment = '(?!)'
 
     def getNames(self, fullname, factory=None):
@@ -95,6 +106,14 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
         short = '%(arch_db)s' % groups
         return complete, normal, short
 
+    def getUriGroups(self, name, strict=None):
+        groups = TaurusDeviceNameValidator.getUriGroups(self, name, strict)
+        if groups is not None:
+            if groups.get('arch_db', None) is None:
+                groups['arch_db'] = '*'  # Wildcard for archiving scheme
+            groups['devname'] = '?db={arch_db}'.format(**groups)
+        return groups
+
 
 class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
     """Validator for Archiving attribute names. Apart from the standard named
@@ -113,9 +132,11 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
     authority = ArchivingAuthorityNameValidator.authority
     path = r'/((?P<attrname>[^/?:#]+(/[^/?:#]+){3})|' \
            r'(?P<_shortattrname>[^/?:#]+/[^/?:#]+))'
-    query = r'({0}|{1})([;?]({1}))'.format(
-        ArchivingDeviceNameValidator.query,
-        '(t0|t1)=([^?#=;]+)') + '{,2}'
+    _dtime = '[^?#=;]+'
+    _sc = '((?<=[^?#=;])(;|\?)|)'
+    query = r'(({dq})?({sc}t0={t})?((;|\?)t1={t})?({sc}ts)?)?'.format(
+        dq=ArchivingDeviceNameValidator.query, sc=_sc, t=_dtime)
+
     fragment = r'[^# ]*'
 
     def getNames(self, fullname, factory=None, fragment=False):
@@ -143,15 +164,20 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
             # if a value is duplicated in the query,
             # it will be overwritten by the last value.
             for element in query.split(';'):
-                k, v = element.split('=')
+                if '=' in element:
+                    k, v = element.split('=')
+                else:
+                    k = element
+                    v = '*'
                 dquery[k] = v
 
         if not 'db' in dquery:
-            db = PyTango.Database(host, port)
-            # TODO verify it is the right property
-            props = db.get_property('PyTangoArchiving', [db, 'Schemas'])
-            # Use the first scheme as default
-            dquery['db'] = props['Schemas'][0]
+            # db = PyTango.Database(host, port)
+            # # TODO verify it is the right property
+            # props = db.get_property('PyTangoArchiving', [db, 'Schemas'])
+            # # Use the first scheme as default
+            # dquery['db'] = props['Schemas'][0]
+            dquery['db'] = '*'  # Wildcard for archiving schem
 
         if not 't0' in dquery:
             dquery['t0'] = _FIRST
@@ -159,7 +185,14 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
         if not 't1' in dquery:
             dquery['t1'] = _LAST
 
+        # From str to epoch
+        dquery['t0'] = str2epoch(dquery['t0'])
+        dquery['t1'] = str2epoch(dquery['t1'])
+
         groups['fullquery'] = "db={db};t0={t0};t1={t1}".format(**dquery)
+
+        if 'ts' in dquery:
+            groups['fullquery'] = groups['fullquery'] + ';ts'
 
         complete = self.scheme +\
                    ':%(authority)s/%(attrname)s?%(fullquery)s' % groups
