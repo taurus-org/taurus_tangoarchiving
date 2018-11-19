@@ -27,23 +27,25 @@
 
 __docformat__ = 'restructuredtext'
 
+import time
 import socket
 import PyTango
 import unittest
+from fandango.functional import str2time
 from taurus.core.test import (valid, invalid, names,
                               AbstractNameValidatorTestCase)
 from archiving.archivingvalidator import (ArchivingAuthorityNameValidator,
                                           ArchivingDeviceNameValidator,
-                                          ArchivingAttributeNameValidator)
-from taurus import tauruscustomsettings
+                                          ArchivingAttributeNameValidator,
+                                          _FIRST,
+                                          _LAST,
+                                          str2epoch)
 
 
 __PY_TANGO_HOST = PyTango.ApiUtil.get_env_var("TANGO_HOST")
 host, port = __PY_TANGO_HOST.split(':')
 __TANGO_HOST = "{0}:{1}".format(socket.getfqdn(host), port)
 
-_FIRST = getattr(tauruscustomsettings, 'ARCHIVING_FIRST_ELEM', "-1d")
-_LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', "now")
 
 #=========================================================================
 # Tests for Archiving Authority name validation
@@ -98,15 +100,24 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
 #=========================================================================
 # Tests for Archiving Attribute name validation (without fragment)
 #=========================================================================
+@valid(name='archiving://foo:1234/a/b/c/d?ts')
+@valid(name='archiving://foo:1234/a/b/c/d?t0=-1d;ts')
+@valid(name='archiving://foo:1234/a/b/c/d?t0=-2d;t1=-1d')
+@valid(name='archiving://foo:1234/a/b/c/d?t0=-2d;t1=-1d;ts')
+@valid(name='archiving://foo:1234/a/b/c/d?db=hdb;t0=-2d;t1=-1d;ts')
+@invalid(name='archiving://foo:1234/a/b/c/d?t1=-2d;t1=-1d')
+@invalid(name='archiving://foo:1234/a/b/c/d?t0=-2d;t0=-1d')
+
+
 @valid(name='archiving://foo:1234/a/b/c/d',
        groups={'authority': '//foo:1234', 'attrname': 'a/b/c/d'})
 @valid(name='archiving://foo:1234/a/b/c/d?db=snap',
-       groups={'authority': '//foo:1234', 'devname': 'snap',
+       groups={'authority': '//foo:1234', 'arch_db': 'snap',
                'attrname': 'a/b/c/d'})
 @valid(name='archiving://foo:1234/a/b/c/d',
        groups={'authority': '//foo:1234', 'attrname': 'a/b/c/d'})
 ## default authority
-@valid(name='archiving:/a/b/c/d?db=hdb', groups={'devname': 'hdb',
+@valid(name='archiving:/a/b/c/d?db=hdb', groups={'arch_db': 'hdb',
                                                  'attrname': 'a/b/c/d'})
 ## default devname
 @valid(name='archiving://foo:1234/a/b/c/d#foo=bla',
@@ -118,37 +129,18 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
 @invalid(name='archiving:a/b/c/d')
 @invalid(name='archiving:foo/a/b/c/d')
 @invalid(name='archiving://foo:1234/hdb/a/b/c/d')
-# The validator does not check queries with duplicated variables
-@valid(name='archiving://foo:1234/bar/d?t0=-d1;t0=-d2')
-#
-@names(name='archiving://foo:1234/a/b/c/d?db=rad2s',
-       out=('archiving://foo:1234/a/b/c/d?db=rad2s;t0=%s;t1=%s' %\
-            (_FIRST, _LAST), '//foo:1234/a/b/c/d?db=rad2s',
-            'a/b/c/d'))
-@names(name='archiving:/a/b/c/d?db=rad2s',
-       out=('archiving://%s/a/b/c/d?db=rad2s;t0=%s;t1=%s' %\
-            (__TANGO_HOST, _FIRST, _LAST),
-            '/a/b/c/d?db=rad2s', 'a/b/c/d'))
-@names(name='archiving://foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22T00:00:00',
-       out=('archiving://foo:1234/a/b/c/d?db=rad10s;' +
-            't0=2016-06-22T00:00:00;t1=%s' % _LAST,
-            '//foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22T00:00:00',
-            'a/b/c/d'))
-@names(name='archiving://foo:1234/a/b/c/d?db=hdblite' +
-            '?t0=2016/06/21T00:00:00?t1=2016/06/22T00:00:00',
-       out=('archiving://foo:1234/a/b/c/d?db=hdblite;' +
-            't0=2016/06/21T00:00:00;t1=2016/06/22T00:00:00',
-            '//foo:1234/a/b/c/d?db=hdblite;t0=2016/06/21T00:00:00;' +
-            't1=2016/06/22T00:00:00',
-            'a/b/c/d'))
-@names(name='archiving://foo:1234/a/b/c/d?db=tdb;t0=-0.5d',
-       out=('archiving://foo:1234/a/b/c/d?db=tdb;t0=-0.5d;t1=%s' % _LAST,
-            '//foo:1234/a/b/c/d?db=tdb;t0=-0.5d', 'a/b/c/d'))
-
-@names(name='archiving:/a/b/c/d?db=tdb?t0=-0.5d#label',
-       out=('archiving://%s/a/b/c/d?db=tdb;t0=-0.5d;t1=%s' %\
+@invalid(name='archiving://foo:1234/bar/d?t0=-2d;t0=-1d')
+@names(name='archiving:/a/b/c/d?db=rad2s;t0=999',
+       out=('archiving://%s/a/b/c/d?db=rad2s;t0=999.0;t1=%s' %\
             (__TANGO_HOST, _LAST),
-            '/a/b/c/d?db=tdb;t0=-0.5d', 'a/b/c/d', 'label'))
+            '/a/b/c/d?db=rad2s;t0=999', 'a/b/c/d'))
+@names(name='archiving://foo:1234/a/b/c/d?db=tdb;t0=1542681831',
+       out=('archiving://foo:1234/a/b/c/d?db=tdb;t0=1542681831.0;t1=%s' % _LAST,
+            '//foo:1234/a/b/c/d?db=tdb;t0=1542681831', 'a/b/c/d'))
+@names(name='archiving:/a/b/c/d?db=tdb?t0=1542681831.7#label',
+       out=('archiving://%s/a/b/c/d?db=tdb;t0=1542681831.7;t1=%s' %\
+            (__TANGO_HOST, _LAST),
+            '/a/b/c/d?db=tdb;t0=1542681831.7', 'a/b/c/d', 'label'))
 class ArchivingAttrValidatorTestCase(AbstractNameValidatorTestCase,
                                  unittest.TestCase):
     validator = ArchivingAttributeNameValidator
