@@ -24,7 +24,6 @@
 
 __all__ = ['ArchivingFactory']
 
-
 from taurus.core.taurusbasetypes import TaurusElementType
 from archivingattribute import ArchivingAttribute
 from archivingauthority import ArchivingAuthority
@@ -76,3 +75,50 @@ class ArchivingFactory(Singleton, TaurusFactory, Logger):
         """Return ArchivingAttributeNameValidator"""
         import archivingvalidator
         return archivingvalidator.ArchivingAttributeNameValidator()
+
+    def getAttribute(self, name):
+        """ Reimplementation of the TaurusFactory method
+        """
+        v = self.getAttributeNameValidator()
+        if not v.isValid(name):
+            msg = "Invalid {scheme} attribute name '{name}'".format(
+                    scheme=self.schemes[0], name=name)
+            raise TaurusException(msg)
+
+        fullname, _, _ = v.getNames(name)
+        groups = v.getUriGroups(fullname)
+        attr = self._attrs.get(fullname)
+        if attr is not None:
+            return attr
+
+        try:
+            # this works only if the devname is present in the attr full name
+            # (not all schemes are constructed in this way)
+            devname = v.getUriGroups(fullname)['devname']
+            dev = self.getDevice(devname)
+        except:
+            self.debug('Cannot get attribute parent from name "%s"', fullname)
+            dev = None
+
+        cls = self.elementTypesMap[TaurusElementType.Attribute]
+        attr = cls(name=fullname, parent=dev)
+
+        # Looking for the complementary
+        if 'ts' in groups['query']:
+            complementary = fullname.replace(';ts', '')
+        else:
+            complementary = fullname + ';ts'
+        c_attr = self._attrs.get(complementary)
+        if c_attr is not None:
+            # Get data from the complementary
+            attr._arch_values = c_attr._arch_values
+            attr._arch_timestamps = c_attr._arch_timestamps
+        else:
+            # Get data from the archiving
+            # TODO: Wait 1s to avoid core with PyTangoArchiving
+            import time
+            time.sleep(1)
+            attr.read()
+        self._attrs[fullname] = attr
+
+        return attr
