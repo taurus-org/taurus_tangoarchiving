@@ -55,11 +55,13 @@ class ArchivingAttribute(TaurusAttribute):
 
     def __init__(self, name, parent, **kwargs):
         self.call__init__(TaurusAttribute, name, parent)
-        self._reader = self.getParentObj().getReader()
+        self.parent = parent
         self._validator = ArchivingAttributeNameValidator()
         groups = self._validator.getUriGroups(name)
         self._star_date = self._EPOCH
         self._end_date = None
+        self.return_timestamps = False
+
         query = groups.get('query', None)
         if query is not None:
             for query_elem in query.split(';'):
@@ -69,15 +71,24 @@ class ArchivingAttribute(TaurusAttribute):
                     self._end_date = query_elem[3:]
                     if self._end_date == 'now':
                         self._end_date = time.time()
-        self._value = TaurusAttrValue()
+                if 'ts' in  query_elem:
+                    self.return_timestamps = True
+
+        self._arch_values = TaurusAttrValue()
+        self._arch_timestamps = TaurusAttrValue()
         # TODO: do it from reader
         self.type = DataType.Float
         self.data_format = DataFormat._1D
         # set the label
         self._tg_attr_name = groups.get('attrname')
-        self._label = self._tg_attr_name + '(archiving)'
-        # activate polling
-        self._activatePolling() # TODO: Need it for ploting. It is a bug?
+        self._label = self._tg_attr_name + ' (archiving)'
+
+        wantpolling = not self.isUsingEvents()
+        haspolling = self.isPollingEnabled()
+        if wantpolling:
+            self._activatePolling()
+        elif haspolling and not wantpolling:
+            self.disablePolling()
 
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
     # Necessary to overwrite
@@ -92,26 +103,35 @@ class ArchivingAttribute(TaurusAttribute):
         raise TaurusException('Archiving attributes are read-only')
 
     def read(self, cache=True):
-        data = self._reader.get_attribute_values(self._tg_attr_name,
-                                                 self._star_date,
-                                                 self._end_date, decimate=True)
+        if cache and self._arch_values.rvalue is not None:
+            if self.return_timestamps is True:
+                return self._arch_timestamps
+            else:
+                return self._arch_values
+
+        reader = self.parent.getReader()
+
+        data = reader.get_attribute_values(self._tg_attr_name, self._star_date,
+                                           self._end_date, decimate=True)
         if len(data) > 0:
             times, values = zip(*data)
-            self._value.rvalue = Q_(values)
-            self._value.time = times
-            # TODO
-            if self._end_date is not None:
-                self._deactivatePolling()
+            # TODO it assumes float values
+            self._arch_values.rvalue = Q_(values)
+            self._arch_timestamps.rvalue = Q_(times, 's')
         else:
-            self._value.rvalue = []
-            self._value.time = TaurusTimeVal().now() #TODO ?
+            self._arch_values.rvalue = []
+            self._arch_timestamps.rvalue = []
+        self._arch_values.time = TaurusTimeVal().now()
+        self._arch_timestamps.time = TaurusTimeVal().now()
 
-        return self._value
+        if self.return_timestamps is True:
+            return self._arch_timestamps
+        else:
+            return self._arch_values
 
     def poll(self):
-        v = self.read(cache=False)
-        if len(v.rvalue) > 0:
-            self.fireEvent(TaurusEventType.Periodic, v)
+        v = self.read(cache=True)
+        self.fireEvent(TaurusEventType.Periodic, v)
 
     def _subscribeEvents(self):
         pass
