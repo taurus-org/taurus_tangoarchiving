@@ -31,15 +31,13 @@ import time
 import socket
 import PyTango
 import unittest
-from fandango.functional import str2time
 from taurus.core.test import (valid, invalid, names,
                               AbstractNameValidatorTestCase)
 from archiving.archivingvalidator import (ArchivingAuthorityNameValidator,
                                           ArchivingDeviceNameValidator,
                                           ArchivingAttributeNameValidator,
-                                          _FIRST,
                                           _LAST,
-                                          str2epoch)
+                                          str2localtime)
 
 
 __PY_TANGO_HOST = PyTango.ApiUtil.get_env_var("TANGO_HOST")
@@ -105,10 +103,15 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
 @valid(name='archiving://foo:1234/a/b/c/d?t0=-2d;t1=-1d')
 @valid(name='archiving://foo:1234/a/b/c/d?t0=-2d;t1=-1d;ts')
 @valid(name='archiving://foo:1234/a/b/c/d?db=hdb;t0=-2d;t1=-1d;ts')
+@valid(name='archiving://foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22')
+@valid(name='archiving://foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22T00:00:00')
+@valid(name='archiving://foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22T00')
+@valid(name='archiving://foo:1234/a/b/c/d?db=rad10s;t0=2016-06-22T00:00')
+
+
+
 @invalid(name='archiving://foo:1234/a/b/c/d?t1=-2d;t1=-1d')
 @invalid(name='archiving://foo:1234/a/b/c/d?t0=-2d;t0=-1d')
-
-
 @valid(name='archiving://foo:1234/a/b/c/d',
        groups={'authority': '//foo:1234', 'attrname': 'a/b/c/d'})
 @valid(name='archiving://foo:1234/a/b/c/d?db=snap',
@@ -131,16 +134,16 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
 @invalid(name='archiving://foo:1234/hdb/a/b/c/d')
 @invalid(name='archiving://foo:1234/bar/d?t0=-2d;t0=-1d')
 @names(name='archiving:/a/b/c/d?db=rad2s;t0=999',
-       out=('archiving://%s/a/b/c/d?db=rad2s;t0=999.0;t1=%s' %\
-            (__TANGO_HOST, _LAST),
-            '/a/b/c/d?db=rad2s;t0=999', 'a/b/c/d'))
+       out=('archiving://%s/a/b/c/d?db=rad2s;t0=1970-01-01T01:16:39;t1=%s' %\
+            (__TANGO_HOST, str2localtime(_LAST)),
+            '/a/b/c/d?db=rad2s;t0=1970-01-01T01:16:39', 'a/b/c/d'))
 @names(name='archiving://foo:1234/a/b/c/d?db=tdb;t0=1542681831',
-       out=('archiving://foo:1234/a/b/c/d?db=tdb;t0=1542681831.0;t1=%s' % _LAST,
-            '//foo:1234/a/b/c/d?db=tdb;t0=1542681831', 'a/b/c/d'))
+       out=('archiving://foo:1234/a/b/c/d?db=tdb;t0=2018-11-20T03:43:51;t1=%s' % str2localtime(_LAST),
+            '//foo:1234/a/b/c/d?db=tdb;t0=2018-11-20T03:43:51', 'a/b/c/d'))
 @names(name='archiving:/a/b/c/d?db=tdb?t0=1542681831.7#label',
-       out=('archiving://%s/a/b/c/d?db=tdb;t0=1542681831.7;t1=%s' %\
-            (__TANGO_HOST, _LAST),
-            '/a/b/c/d?db=tdb;t0=1542681831.7', 'a/b/c/d', 'label'))
+       out=('archiving://%s/a/b/c/d?db=tdb;t0=2018-11-20T03:43:51;t1=%s' %\
+            (__TANGO_HOST, str2localtime(_LAST)),
+            '/a/b/c/d?db=tdb;t0=2018-11-20T03:43:51', 'a/b/c/d', 'label'))
 class ArchivingAttrValidatorTestCase(AbstractNameValidatorTestCase,
                                  unittest.TestCase):
     validator = ArchivingAttributeNameValidator

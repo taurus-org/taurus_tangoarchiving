@@ -41,11 +41,16 @@ from taurus import tauruscustomsettings
 _FIRST = getattr(tauruscustomsettings, 'ARCHIVING_FIRST_ELEM', "-1d")
 _LAST = getattr(tauruscustomsettings, 'ARCHIVING_LAST_ELEM', time.time())
 
-def str2epoch(str_time):
+
+def str2localtime(str_time):
     try:
         v = float(str_time)
     except ValueError:
-        v = time.time() + str2time(str_time)
+        v = str2time(str_time)
+        if v < 0:
+            v = time.time() + v
+    v = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(v))
+
     return v
 
 
@@ -158,18 +163,29 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
 
         query = groups['query']
         dquery = {}
+        norm_query = ''
         if query is not None:
             query = query.replace('?', ';')
             groups['query'] = query
             # if a value is duplicated in the query,
             # it will be overwritten by the last value.
+
             for element in query.split(';'):
                 if '=' in element:
                     k, v = element.split('=')
+                    if k == 't0':
+                        qv = '{t0}'
+                    elif k == 't1':
+                        qv = '{t1}'
+                    else:
+                        qv = v
+                    norm_query += '{0}={1};'.format(k, qv)
                 else:
+                    norm_query += '{0};'.format(element)
                     k = element
                     v = '*'
                 dquery[k] = v
+            norm_query = norm_query[:-1]
 
         if not 'db' in dquery:
             # db = PyTango.Database(host, port)
@@ -184,10 +200,15 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
 
         if not 't1' in dquery:
             dquery['t1'] = _LAST
+        
+        # From str to a time string expressing local time.
+        dquery['t0'] = str2localtime(dquery['t0'])
+        dquery['t1'] = str2localtime(dquery['t1'])
 
-        # From str to epoch
-        dquery['t0'] = str2epoch(dquery['t0'])
-        dquery['t1'] = str2epoch(dquery['t1'])
+        # Normalize query
+        groups['norm_query'] = norm_query.format(t0=dquery['t0'],
+                                                 t1=dquery['t1'])
+
 
         groups['fullquery'] = "db={db};t0={t0};t1={t1}".format(**dquery)
 
@@ -197,9 +218,9 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
         complete = self.scheme +\
                    ':%(authority)s/%(attrname)s?%(fullquery)s' % groups
         if default_auth:
-            normal = '/%(attrname)s?%(query)s' % groups
+            normal = '/%(attrname)s?%(norm_query)s' % groups
         else:
-            normal = '%(authority)s/%(attrname)s?%(query)s' % groups
+            normal = '%(authority)s/%(attrname)s?%(norm_query)s' % groups
         short = '%(attrname)s' % groups
 
         # return fragment if requested
