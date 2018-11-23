@@ -25,7 +25,7 @@
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.0'
 description = 'archiving Taurus scheme'
 long_description = ''' archiving is the Taurus scheme for accessing to 
 pytangoarchiving system. It is a read only scheme'''
