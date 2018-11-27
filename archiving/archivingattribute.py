@@ -61,10 +61,11 @@ class ArchivingAttribute(TaurusAttribute):
         self._star_date = self._EPOCH
         self._end_date = None
         self.return_timestamps = False
+        arch_label = "(archiving)"
 
-        query = groups.get('query', None)
-        if query is not None:
-            for query_elem in query.split(';'):
+        self._query = groups.get('query', None)
+        if self._query is not None:
+            for query_elem in self._query.split(';'):
                 if 't0=' in query_elem:
                     self._star_date = query_elem[3:]
                 if 't1=' in query_elem:
@@ -73,12 +74,13 @@ class ArchivingAttribute(TaurusAttribute):
                         self._end_date = time.time()
                 if 'ts' in  query_elem:
                     self.return_timestamps = True
+                    arch_label = "(archiving ts)"
 
         self._arch_values = TaurusAttrValue()
         self._arch_timestamps = TaurusAttrValue()
         # set the label
         self._tg_attr_name = groups.get('attrname')
-        self._label = self._tg_attr_name + ' (archiving)'
+        self._label = "{} {}".format(self._tg_attr_name, arch_label)
 
         wantpolling = not self.isUsingEvents()
         haspolling = self.isPollingEnabled()
@@ -86,6 +88,27 @@ class ArchivingAttribute(TaurusAttribute):
             self._activatePolling()
         elif haspolling and not wantpolling:
             self.disablePolling()
+
+    def getComplementaryUri(self):
+        """ Returns the attribute complementary URI (fullname)"""
+        fullname = self.fullname
+        complementary = None
+        if self._query is not None:
+            if 'ts' in self._query:
+                complementary = fullname.replace(';ts', '')
+            else:
+                complementary = fullname + ';ts'
+        return complementary
+
+    def getUriTemplate(self):
+        """ Returns a URI template (fullname)"""
+        fullname = self.fullname
+        name = fullname.split(';')[0]
+        partial_query = "{;t0={0};t1={1}}"
+        if self.return_timestamps is True:
+            partial_query += ";ts"
+        fullname = name + partial_query
+        return fullname
 
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
     # Necessary to overwrite
@@ -101,7 +124,6 @@ class ArchivingAttribute(TaurusAttribute):
 
         if isinstance(v[0], (int, float)):
             v = Q_(v)
-
         return v
 
     def decode(self, attr_value):
