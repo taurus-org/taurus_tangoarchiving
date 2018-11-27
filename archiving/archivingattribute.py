@@ -26,7 +26,7 @@
 __all__ = ["ArchivingAttribute"]
 
 import time
-import datetime
+import numpy as np
 
 from taurus.core.units import Q_
 from taurus.core.taurusattribute import TaurusAttribute
@@ -76,9 +76,6 @@ class ArchivingAttribute(TaurusAttribute):
 
         self._arch_values = TaurusAttrValue()
         self._arch_timestamps = TaurusAttrValue()
-        # TODO: do it from reader
-        self.type = DataType.Float
-        self.data_format = DataFormat._1D
         # set the label
         self._tg_attr_name = groups.get('attrname')
         self._label = self._tg_attr_name + ' (archiving)'
@@ -94,7 +91,18 @@ class ArchivingAttribute(TaurusAttribute):
     # Necessary to overwrite
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
     def encode(self, value):
-        return value
+        v = np.array(value)
+        if len(v.shape) == 1:
+            self.data_format = DataFormat._1D
+        elif len(v.shape) == 2:
+            self.data_format = DataFormat._2D
+        else:
+            raise Exception('Data structure is not supported')
+
+        if isinstance(v[0], (int, float)):
+            v = Q_(v)
+
+        return v
 
     def decode(self, attr_value):
         return attr_value
@@ -115,8 +123,7 @@ class ArchivingAttribute(TaurusAttribute):
                                            self._end_date, decimate=True)
         if len(data) > 0:
             times, values = zip(*data)
-            # TODO it assumes float values
-            self._arch_values.rvalue = Q_(values)
+            self._arch_values.rvalue = self.encode(values)
             self._arch_timestamps.rvalue = Q_(times, 's')
         else:
             self._arch_values.rvalue = []
