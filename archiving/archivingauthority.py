@@ -57,7 +57,7 @@ class ArchivingAuthority(TaurusAuthority):
         v = ArchivingAuthorityNameValidator()
         groups = v.getUriGroups(name)
         if groups is None:
-            raise TaurusException('Invalid name %s' %name)
+            raise TaurusException('Invalid name %s' % name)
         host = groups.get('host')
         port = groups.get('port')
         try:
@@ -72,3 +72,13 @@ class ArchivingAuthority(TaurusAuthority):
                                            [self._tangodb, 'DbConfig'])
         return props
 
+    def getSchemas(self):
+        """ Returns a list of configured archiving schemas"""
+        # The archiving database configuration is defined in the tango database
+        # as free property.
+        props = self._tangodb.get_property('PyTangoArchiving',
+                                           [self._tangodb, 'Schemas'])
+        schemas = props.get('Schemas', [])
+        if len(schemas) != 0:
+            schemas.append('*')
+        return schemas
