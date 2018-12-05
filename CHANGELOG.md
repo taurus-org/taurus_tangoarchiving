@@ -7,6 +7,8 @@ This file follows the formats and conventions from [keepachangelog.com]
 
 ### Added
 - Add methods to get Attribute URIs
+- Rename module from archiving to taurus_tangoarchiving
+- Rename classes and files: adding tango prefix
 
 ### Fixed
 - Fix TODO use attribute encode to set attribute configuration
