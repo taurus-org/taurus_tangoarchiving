@@ -23,19 +23,19 @@
 ##
 #############################################################################
 
-__all__ = ["ArchivingAuthority"]
+__all__ = ["TangoArchivingAuthority"]
 
 import taurus
 import socket
 import PyTango
 from taurus.core.taurusauthority import TaurusAuthority
 from taurus.core.taurusexception import TaurusException
-from archivingvalidator import ArchivingAuthorityNameValidator
+from tangoarchivingvalidator import TangoArchivingAuthorityNameValidator
 
 
-class ArchivingAuthority(TaurusAuthority):
+class TangoArchivingAuthority(TaurusAuthority):
     '''
-    Archiving authority class for Archiving
+    TangoArchiving authority class for Archiving
     '''
 
     _scheme = 'tgarch'
@@ -54,7 +54,7 @@ class ArchivingAuthority(TaurusAuthority):
             name = '%s:%s' %(self._scheme, t_default_authority)
 
         TaurusAuthority.__init__(self, name, parent)
-        v = ArchivingAuthorityNameValidator()
+        v = TangoArchivingAuthorityNameValidator()
         groups = v.getUriGroups(name)
         if groups is None:
             raise TaurusException('Invalid name %s' % name)

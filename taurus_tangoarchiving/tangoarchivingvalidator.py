@@ -23,8 +23,9 @@
 ##
 #############################################################################
 
-__all__ = ["ArchivingAuthorityNameValidator", "ArchivingDeviceNameValidator", 
-           "ArchivingAttributeNameValidator"]
+__all__ = ["TangoArchivingAuthorityNameValidator",
+           "TangoArchivingDeviceNameValidator",
+           "TangoArchivingAttributeNameValidator"]
 
 import time
 import taurus
@@ -54,30 +55,30 @@ def str2localtime(str_time):
     return v
 
 
-class ArchivingAuthorityNameValidator(TangoAuthorityNameValidator):
-    """Validator for Archiving authority names. Apart from the standard named
-    groups (scheme, authority, path, query and fragment), the following named
-    groups are created:
+class TangoArchivingAuthorityNameValidator(TangoAuthorityNameValidator):
+    """Validator for TangoArchiving authority names. Apart from the standard
+    named groups (scheme, authority, path, query and fragment),
+    the following named groups are created:
 
      - host: tango host name, without port.
      - port: port number
     """
     scheme = 'tgarch'
 
-class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
-    """Validator for Archiving device names. Apart from the standard named
+class TangoArchivingDeviceNameValidator(TaurusDeviceNameValidator):
+    """Validator for TangoArchiving device names. Apart from the standard named
     groups (scheme, authority, path, query and fragment), the following named
     groups are created:
 
      - devname: device name represent a valid scheme
-     - [host] as in :class:`ArchivingAuthorityNameValidator`
-     - [port] as in :class:`ArchivingAuthorityNameValidator`
+     - [host] as in :class:`TangoArchivingAuthorityNameValidator`
+     - [port] as in :class:`TangoArchivingAuthorityNameValidator`
 
     Note: brackets on the group name indicate that this group will only contain
     a string if the URI contains it.
     """
     scheme = 'tgarch'
-    authority = ArchivingAuthorityNameValidator.authority
+    authority = TangoArchivingAuthorityNameValidator.authority
     path = r''
     query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp|\*)))?'
     fragment = '(?!)'
@@ -120,27 +121,27 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
         return groups
 
 
-class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
-    """Validator for Archiving attribute names. Apart from the standard named
-    groups (scheme, authority, path, query and fragment), the following named
-    groups are created:
+class TangoArchivingAttributeNameValidator(TaurusAttributeNameValidator):
+    """Validator for TangoArchiving attribute names. Apart from the standard
+    named groups (scheme, authority, path, query and fragment), the following
+    named groups are created:
 
      - attrname: archived tango attribute name
-     - devname: as in :class:`ArchivingDeviceNameValidator`
-     - [host] as in :class:`ArchivingAuthorityNameValidator`
-     - [port] as in :class:`ArchivingAuthorityNameValidator`
+     - devname: as in :class:`TangoArchivingDeviceNameValidator`
+     - [host] as in :class:`TangoArchivingAuthorityNameValidator`
+     - [port] as in :class:`TangoArchivingAuthorityNameValidator`
 
     Note: brackets on the group name indicate that this group will only contain
     a string if the URI contains it.
     """
     scheme = 'tgarch'
-    authority = ArchivingAuthorityNameValidator.authority
+    authority = TangoArchivingAuthorityNameValidator.authority
     path = r'/((?P<attrname>[^/?:#]+(/[^/?:#]+){3})|' \
            r'(?P<_shortattrname>[^/?:#]+/[^/?:#]+))'
     _dtime = '[^?#=;]+'
     _sc = '((?<=[^?#=;])(;|\?)|)'
     query = r'(({dq})?({sc}t0={t})?((;|\?)t1={t})?({sc}ts)?)?'.format(
-        dq=ArchivingDeviceNameValidator.query, sc=_sc, t=_dtime)
+        dq=TangoArchivingDeviceNameValidator.query, sc=_sc, t=_dtime)
 
     fragment = r'[^# ]*'
 

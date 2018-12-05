@@ -23,7 +23,7 @@
 ##
 #############################################################################
 
-"""Test for taurus.core.archiving.test.test_archivingvalidator..."""
+"""Test for tangoarchivingvalidator module"""
 
 __docformat__ = 'restructuredtext'
 
@@ -33,10 +33,10 @@ import PyTango
 import unittest
 from taurus.core.test import (valid, invalid, names,
                               AbstractNameValidatorTestCase)
-from taurus_tangoarchiving.archivingvalidator import (
-    ArchivingAuthorityNameValidator,
-    ArchivingDeviceNameValidator,
-    ArchivingAttributeNameValidator,
+from taurus_tangoarchiving.tangoarchivingvalidator import (
+    TangoArchivingAuthorityNameValidator,
+    TangoArchivingDeviceNameValidator,
+    TangoArchivingAttributeNameValidator,
     _LAST,
     str2localtime)
 
@@ -62,7 +62,7 @@ __TANGO_HOST = "{0}:{1}".format(socket.getfqdn(host), port)
        out=('tgarch://foo:123', '//foo:123', 'foo:123'))
 class ArchivingAuthValidatorTestCase(AbstractNameValidatorTestCase,
                                  unittest.TestCase):
-    validator = ArchivingAuthorityNameValidator
+    validator = TangoArchivingAuthorityNameValidator
 
 #=========================================================================
 # Tests for Archiving Device name validation
@@ -94,7 +94,7 @@ class ArchivingAuthValidatorTestCase(AbstractNameValidatorTestCase,
        out=('tgarch://foo:1234?db=hdb', '//foo:1234?db=hdb', 'hdb'))
 class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
                                 unittest.TestCase):
-    validator = ArchivingDeviceNameValidator
+    validator = TangoArchivingDeviceNameValidator
 
 #=========================================================================
 # Tests for Archiving Attribute name validation (without fragment)
@@ -147,4 +147,4 @@ class ArchivingDevValidatorTestCase(AbstractNameValidatorTestCase,
             '/a/b/c/d?db=tdb;t0=2018-11-20T03:43:51', 'a/b/c/d', 'label'))
 class ArchivingAttrValidatorTestCase(AbstractNameValidatorTestCase,
                                  unittest.TestCase):
-    validator = ArchivingAttributeNameValidator
+    validator = TangoArchivingAttributeNameValidator

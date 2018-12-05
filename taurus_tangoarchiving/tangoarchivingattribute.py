@@ -23,7 +23,7 @@
 ##
 #############################################################################
 
-__all__ = ["ArchivingAttribute"]
+__all__ = ["TangoArchivingAttribute"]
 
 import time
 import numpy as np
@@ -35,30 +35,28 @@ from taurus.core.taurusbasetypes import (TaurusEventType,
                                          TaurusAttrValue,
                                          TaurusTimeVal,
                                          DataFormat, DataType)
-from archivingvalidator import ArchivingAttributeNameValidator
+from tangoarchivingvalidator import TangoArchivingAttributeNameValidator
 
 
 
-class ArchivingAttribute(TaurusAttribute):
+class TangoArchivingAttribute(TaurusAttribute):
     '''
-    A :class:`TaurusAttribute` that gives access to an Archiving Process Variable.
+    A :class:`TaurusAttribute` that gives access to a TangoArchiving Process
+    Variable.
     
-    .. seealso:: :mod:`taurus.core.archiving` 
-    
+
     .. warning:: In most cases this class should not be instantiated directly.
                  Instead it should be done via the :meth:`ArchivingFactory.getAttribute`
     '''
 
     _scheme = 'tgarch'
-     # Archiving reading limited to last 10 years. #TODO verify
-    _EPOCH = time.time()-10*365*24*3600
 
     def __init__(self, name, parent, **kwargs):
         self.call__init__(TaurusAttribute, name, parent)
         self.parent = parent
-        self._validator = ArchivingAttributeNameValidator()
+        self._validator = TangoArchivingAttributeNameValidator()
         groups = self._validator.getUriGroups(name)
-        self._star_date = self._EPOCH
+        self._star_date = None
         self._end_date = None
         self.return_timestamps = False
         arch_label = "(archiving)"
@@ -72,7 +70,7 @@ class ArchivingAttribute(TaurusAttribute):
                     self._end_date = query_elem[3:]
                     if self._end_date == 'now':
                         self._end_date = time.time()
-                if 'ts' in  query_elem:
+                if 'ts' in query_elem:
                     self.return_timestamps = True
                     arch_label = "(archiving ts)"
 

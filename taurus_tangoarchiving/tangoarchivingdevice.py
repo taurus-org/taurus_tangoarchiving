@@ -22,20 +22,20 @@
 ##
 #############################################################################
 
-__all__ = ["ArchivingDevice"]
+__all__ = ["TangoArchivingDevice"]
 
 from PyTangoArchiving import Reader
 from taurus.core.taurusdevice import TaurusDevice
-from archivingvalidator import ArchivingDeviceNameValidator
+from tangoarchivingvalidator import TangoArchivingDeviceNameValidator
 
-class ArchivingDevice(TaurusDevice):
-    """Archiving device object. """
+class TangoArchivingDevice(TaurusDevice):
+    """TangoArchiving device object. """
     _scheme = 'tgarch'
     _description = "A Archiving Device"
 
     def __init__(self, name, **kwargs):
         TaurusDevice.__init__(self, name, **kwargs)
-        self._validator = ArchivingDeviceNameValidator()
+        self._validator = TangoArchivingDeviceNameValidator()
         g = self._validator.getUriGroups(self.getFullName())
         db = g.get('arch_db', '*')
         tango_host = '%s:%s' % (g.get('host'), g.get('port'))
@@ -59,6 +59,6 @@ class ArchivingDevice(TaurusDevice):
     def getArchivedAttributes(self, active=False):
         """getArchivedAttributes show the names of the archived attributes
 
-       :return: A list with the names of the current archived attributes.
+        :return: A list with the names of the current archived attributes.
         """
         return self._reader.get_attributes(active)

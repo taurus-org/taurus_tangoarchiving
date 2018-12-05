@@ -22,12 +22,12 @@
 ##
 #############################################################################
 
-__all__ = ['ArchivingFactory']
+__all__ = ['TangoArchivingFactory']
 
 from taurus.core.taurusbasetypes import TaurusElementType
-from archivingattribute import ArchivingAttribute
-from archivingauthority import ArchivingAuthority
-from archivingdevice import ArchivingDevice
+from tangoarchivingattribute import TangoArchivingAttribute
+from tangoarchivingauthority import TangoArchivingAuthority
+from tangoarchivingdevice import TangoArchivingDevice
 from taurus.core.taurusexception import TaurusException
 from taurus.core.util.log import Logger
 from taurus.core.util.singleton import Singleton
@@ -39,15 +39,15 @@ except ImportError:
     PyTangoArchiving = None
 
 
-class ArchivingFactory(Singleton, TaurusFactory, Logger):
+class TangoArchivingFactory(Singleton, TaurusFactory, Logger):
     """
     A Singleton class that provides Archiving related objects.
     """
     schemes = ("tgarch",)
 
-    elementTypesMap = {TaurusElementType.Authority: ArchivingAuthority,
-                       TaurusElementType.Device: ArchivingDevice,
-                       TaurusElementType.Attribute: ArchivingAttribute
+    elementTypesMap = {TaurusElementType.Authority: TangoArchivingAuthority,
+                       TaurusElementType.Device: TangoArchivingDevice,
+                       TaurusElementType.Attribute: TangoArchivingAttribute
                        }
 
     def __init__(self):
@@ -63,19 +63,19 @@ class ArchivingFactory(Singleton, TaurusFactory, Logger):
         TaurusFactory.__init__(self)
 
     def getAuthorityNameValidator(self):
-        """Return ArchivingDatabaseNameValidator"""
-        import archivingvalidator
-        return archivingvalidator.ArchivingAuthorityNameValidator()
+        """Return TangoArchivingDatabaseNameValidator"""
+        import tangoarchivingvalidator
+        return tangoarchivingvalidator.TangoArchivingAuthorityNameValidator()
                  
     def getDeviceNameValidator(self):
-        """Return ArchivingDeviceNameValidator"""
-        import archivingvalidator
-        return archivingvalidator.ArchivingDeviceNameValidator()
+        """Return TangoArchivingDeviceNameValidator"""
+        import tangoarchivingvalidator
+        return tangoarchivingvalidator.TangoArchivingDeviceNameValidator()
 
     def getAttributeNameValidator(self):
-        """Return ArchivingAttributeNameValidator"""
-        import archivingvalidator
-        return archivingvalidator.ArchivingAttributeNameValidator()
+        """Return TangoArchivingAttributeNameValidator"""
+        import tangoarchivingvalidator
+        return tangoarchivingvalidator.TangoArchivingAttributeNameValidator()
 
     def getAttribute(self, name):
         """ Reimplementation of the TaurusFactory method

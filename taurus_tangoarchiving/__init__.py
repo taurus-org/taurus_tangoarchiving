@@ -22,9 +22,9 @@
 ##
 #############################################################################
 
-from archivingattribute import *                                                    
-from archivingauthority import *
-from archivingdevice import *
-from archivingfactory import *
-from archivingvalidator import *
+from tangoarchivingattribute import *
+from tangoarchivingauthority import *
+from tangoarchivingdevice import *
+from tangoarchivingfactory import *
+from tangoarchivingvalidator import *
 
