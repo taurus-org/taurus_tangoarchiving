@@ -49,7 +49,7 @@ class ArchivingAttribute(TaurusAttribute):
                  Instead it should be done via the :meth:`ArchivingFactory.getAttribute`
     '''
 
-    _scheme = 'archiving'
+    _scheme = 'tgarch'
      # Archiving reading limited to last 10 years. #TODO verify
     _EPOCH = time.time()-10*365*24*3600
 

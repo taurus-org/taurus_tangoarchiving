@@ -62,7 +62,7 @@ class ArchivingAuthorityNameValidator(TangoAuthorityNameValidator):
      - host: tango host name, without port.
      - port: port number
     """
-    scheme = "archiving"
+    scheme = 'tgarch'
 
 class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     """Validator for Archiving device names. Apart from the standard named
@@ -76,7 +76,7 @@ class ArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     Note: brackets on the group name indicate that this group will only contain
     a string if the URI contains it.
     """
-    scheme = 'archiving'
+    scheme = 'tgarch'
     authority = ArchivingAuthorityNameValidator.authority
     path = r''
     query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp|\*)))?'
@@ -133,7 +133,7 @@ class ArchivingAttributeNameValidator(TaurusAttributeNameValidator):
     Note: brackets on the group name indicate that this group will only contain
     a string if the URI contains it.
     """
-    scheme = 'archiving'
+    scheme = 'tgarch'
     authority = ArchivingAuthorityNameValidator.authority
     path = r'/((?P<attrname>[^/?:#]+(/[^/?:#]+){3})|' \
            r'(?P<_shortattrname>[^/?:#]+/[^/?:#]+))'

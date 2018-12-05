@@ -38,7 +38,7 @@ class ArchivingAuthority(TaurusAuthority):
     Archiving authority class for Archiving
     '''
 
-    _scheme = 'archiving'
+    _scheme = 'tgarch'
 
     def __init__(self, name=None, parent=None):
         if name is None:

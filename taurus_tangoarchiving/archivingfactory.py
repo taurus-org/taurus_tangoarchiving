@@ -38,11 +38,12 @@ try:
 except ImportError:
     PyTangoArchiving = None
 
+
 class ArchivingFactory(Singleton, TaurusFactory, Logger):
     """
     A Singleton class that provides Archiving related objects.
     """
-    schemes = ("archiving",)
+    schemes = ("tgarch",)
 
     elementTypesMap = {TaurusElementType.Authority: ArchivingAuthority,
                        TaurusElementType.Device: ArchivingDevice,

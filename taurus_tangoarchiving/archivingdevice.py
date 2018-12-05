@@ -30,7 +30,7 @@ from archivingvalidator import ArchivingDeviceNameValidator
 
 class ArchivingDevice(TaurusDevice):
     """Archiving device object. """
-    _scheme = 'archiving'
+    _scheme = 'tgarch'
     _description = "A Archiving Device"
 
     def __init__(self, name, **kwargs):
