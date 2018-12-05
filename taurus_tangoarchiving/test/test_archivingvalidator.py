@@ -33,11 +33,12 @@ import PyTango
 import unittest
 from taurus.core.test import (valid, invalid, names,
                               AbstractNameValidatorTestCase)
-from archiving.archivingvalidator import (ArchivingAuthorityNameValidator,
-                                          ArchivingDeviceNameValidator,
-                                          ArchivingAttributeNameValidator,
-                                          _LAST,
-                                          str2localtime)
+from taurus_tangoarchiving.archivingvalidator import (
+    ArchivingAuthorityNameValidator,
+    ArchivingDeviceNameValidator,
+    ArchivingAttributeNameValidator,
+    _LAST,
+    str2localtime)
 
 
 __PY_TANGO_HOST = PyTango.ApiUtil.get_env_var("TANGO_HOST")

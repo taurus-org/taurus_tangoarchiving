@@ -40,7 +40,7 @@ url = 'http://www.taurus-scada.org/en/stable/devel/core_tutorial.html'
 install_requires = ['taurus>=4.0.1',
                     'pytangoarchiving']
 
-setup(name='archiving',
+setup(name='taurus_tangoarchiving',
       version=version,
       description=description,
       long_description=long_description,
