@@ -5,11 +5,11 @@ It uses the [PyTangoArchiving](https://github.com/tango-controls/PyTangoArchivin
 module.
 
 ## Enabling
-To enable it, install `archiving` and edit `<taurus>/tauruscustomsettings.py`
-to add `archiving` to the `EXTRA_SCHEME_MODULES` list. For example:
+To enable it, install `taurus_tangoarchiving` and edit `<taurus>/tauruscustomsettings.py`
+to add `taurus_tangoarchiving` to the `EXTRA_SCHEME_MODULES` list. For example:
 
 ```python
-EXTRA_SCHEME_MODULES = ['archiving']
+EXTRA_SCHEME_MODULES = ['taurus_tangoarchiving']
 ```
 
 ## Examples:
@@ -21,11 +21,11 @@ Once the new scheme is enabled in your taurus installation, you can:
 
 ```python
 import taurus
-myattr = taurus.Attribute('archiving:/a/b/c/d?db=tdb?t0=-0.5d')
+myattr = taurus.Attribute('tgarch:/a/b/c/d?db=tdb?t0=-0.5d')
 ```
 - Show the values in a TaurusForm:
 
 ```bash
-$> taurusform 'archiving:/a/b/c/d?db=tdb?t0=-0.5d'
+$> taurusform 'tgarch:/a/b/c/d?db=tdb?t0=-0.5d'
 ```
 ```
