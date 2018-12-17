@@ -6,6 +6,7 @@ This file follows the formats and conventions from [keepachangelog.com]
 ## [0.1.X]
 
 ### Added
+- Add entrypoint to register the scheme 
 - Add methods to get Attribute URIs
 - Rename module from archiving to taurus_tangoarchiving
 - Rename classes and files: adding tango prefix
