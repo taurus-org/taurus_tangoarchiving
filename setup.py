@@ -26,9 +26,9 @@
 from setuptools import setup, find_packages
 
 version = '0.1.0'
-description = 'archiving Taurus scheme'
-long_description = ''' archiving is the Taurus scheme for accessing to 
-pytangoarchiving system. It is a read only scheme'''
+description = 'taurus_tangoarchiving Taurus scheme'
+long_description = ''' taurus_tangoarchiving is the Taurus scheme for accessing
+ to pytangoarchiving system. It is a read only scheme'''
 license = 'LGPL'
 platforms = ['Linux', 'Windows']
 
@@ -39,6 +39,10 @@ url = 'http://www.taurus-scada.org/en/stable/devel/core_tutorial.html'
 
 install_requires = ['taurus>=4.0.1',
                     'pytangoarchiving']
+
+entry_points = {
+    'taurus.core.schemes': ['taurus_tangoarchiving = taurus_tangoarchiving',],
+}
 
 setup(name='taurus_tangoarchiving',
       version=version,
@@ -52,6 +56,7 @@ setup(name='taurus_tangoarchiving',
       license=license,
       packages=find_packages(),
       include_package_data=True,
+      entry_points=entry_points,
       install_requires=install_requires,
       test_suite='archiving.test.testsuite.get_suite',
       )
