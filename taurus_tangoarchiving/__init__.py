@@ -27,4 +27,4 @@ from tangoarchivingauthority import *
 from tangoarchivingdevice import *
 from tangoarchivingfactory import *
 from tangoarchivingvalidator import *
-
+from widget import *
