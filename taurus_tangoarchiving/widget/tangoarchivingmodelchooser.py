@@ -131,6 +131,14 @@ class TangoArchivingModelSelector(TaurusWidget):
         self.addModels.emit(models)
 
 
+from taurus.core.tango.tangodatabase import TangoAuthority
+__tango_host = TangoAuthority.get_default_tango_host()# Factory('tango').get_default_tango_host()
+defaultTArcModelSelectorConf = {'klass': TangoArchivingModelSelector,
+                                'name': 'TangoArchiving',
+                                'model': "tgarch://{0}".format(__tango_host)
+                                }
+
+
 if __name__ == '__main__':
 
     def print_models(models):
