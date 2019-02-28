@@ -23,6 +23,7 @@
 ##
 #############################################################################
 
+import re
 import time
 import taurus
 from taurus.core.tango.tangodatabase import TangoAuthority
@@ -88,6 +89,21 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         self.tmodelmodel.clearAll()
         self.tmodelmodel.insertItems(0, attrs)
         self.tmodelmodel.installEventFilter(self)
+
+    def filter(self):
+        filter_text = str(self.ui.lineEdit.text()).lower()
+        for row in range(self.tmodelmodel.rowCount()):
+            item = self.tmodelmodel.items[row]
+
+            try:
+                match = re.match(filter_text, str(item.getSrc()).lower())
+            except:
+                return
+
+            if match is not None:
+                self.ui.listView.setRowHidden(row, False)
+            else:
+                self.ui.listView.setRowHidden(row, True)
 
     def getSelectedModels(self):
         query = "db={0};t0={1};t1={2}"
