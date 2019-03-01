@@ -29,10 +29,29 @@ import taurus
 from taurus.core.tango.tangodatabase import TangoAuthority
 from taurus.external.qt import Qt, QtCore
 from taurus.qt.qtgui.panel import TaurusModelSelectorItem
-from taurus.qt.qtgui.panel.taurusmodellist import (TaurusModelModel,
-                                                   SRC_ROLE)
 from taurus.qt.qtgui.util.ui import UILoadable
 from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
+
+
+class ListModel(Qt.QStandardItemModel):
+
+    def __init__(self, parent=None):
+        Qt.QStandardItemModel.__init__(self, parent)
+        self.models = []
+
+    def addItems(self, models):
+
+        for model in models:
+            # Create an item with a caption
+            item = Qt.QStandardItem(model)
+            self.models.append(model)
+            # Add the item to the model
+            self.appendRow(item)
+
+    def removeItems(self):
+        while self.rowCount() > 0:
+            self.removeRow(0)
+        self.models = []
 
 
 @UILoadable(with_ui='ui')
@@ -45,8 +64,10 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         self.ui.schema_comboBox.currentIndexChanged.connect(
             self.onSelectSchemeComboBox)
 
-        self.tmodelmodel = TaurusModelModel()
-        self.ui.listView.setModel(self.tmodelmodel)
+        self.listmodel = ListModel(self.ui.listView)
+        self.ui.listView.setModel(self.listmodel)
+
+
         self.ui.listView.setDragDropMode(True)
 
         self._toolbar = Qt.QToolBar("TangoSelector toolbar")
@@ -86,18 +107,16 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         active = self.ui.active_checkBox.isChecked()
 
         attrs = dev.getArchivedAttributes(active)
-        self.tmodelmodel.clearAll()
-        self.tmodelmodel.insertItems(0, attrs)
-        self.tmodelmodel.installEventFilter(self)
+        self.listmodel.removeItems()
+        self.listmodel.addItems(attrs)
 
     def filter(self):
         filter_text = str(self.ui.lineEdit.text()).lower()
-        for row in range(self.tmodelmodel.rowCount()):
-            item = self.tmodelmodel.items[row]
-
+        for row, attr in enumerate(self.listmodel.models):
             try:
-                match = re.match(filter_text, str(item.getSrc()).lower())
-            except:
+                match = re.match(filter_text, attr)
+            except Exception as e:
+                print(e)
                 return
 
             if match is not None:
@@ -117,7 +136,7 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         models = []
 
         for idx in selected:
-            attr = self.tmodelmodel.data(idx, role=SRC_ROLE)
+            attr = self.listmodel.data(idx)
 
             if len(t0) == 0:
                 return None
