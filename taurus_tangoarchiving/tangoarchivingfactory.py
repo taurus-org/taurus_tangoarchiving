@@ -119,7 +119,7 @@ class TangoArchivingFactory(Singleton, TaurusFactory, Logger):
             # TODO: Wait 1s to avoid core with PyTangoArchiving
             import time
             time.sleep(1)
-            attr.read()
+            attr._read() # TODO: Use TaurusManager.addJob instead
         self._attrs[fullname] = attr
 
         return attr
