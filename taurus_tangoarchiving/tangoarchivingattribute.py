@@ -157,14 +157,8 @@ class TangoArchivingAttribute(TaurusAttribute):
             return self._arch_values
 
     def poll(self):
-        v = self.read(cache=True)
-        self.fireEvent(TaurusEventType.Periodic, v)
-
-    def _subscribeEvents(self):
-        pass
-
-    def _unsubscribeEvents(self):
-        pass
+        raise TaurusException('Archiving attributes do not support polling')
 
     def isUsingEvents(self):
         return False
+
