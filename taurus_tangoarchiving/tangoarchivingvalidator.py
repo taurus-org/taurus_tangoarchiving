@@ -83,6 +83,12 @@ class TangoArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp|\*)))?'
     fragment = '(?!)'
 
+    pattern = r'^(?P<scheme>%(scheme)s):' + \
+              r'((?P<authority>%(authority)s)($|(?=[/#?])))?' + \
+              r'(?P<path>%(path)s)' + \
+              r'(\?(?P<query>%(query)s))' + \
+              r'(#(?P<fragment>%(fragment)s))?$'
+
     def getNames(self, fullname, factory=None):
         """reimplemented from :class:`TaurusDeviceNameValidator`.
         """
