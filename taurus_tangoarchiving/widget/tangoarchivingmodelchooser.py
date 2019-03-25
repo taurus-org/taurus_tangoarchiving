@@ -63,6 +63,7 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         self.loadUi()
         self.ui.schema_comboBox.currentIndexChanged.connect(
             self.onSelectSchemeComboBox)
+        self.ui.active_checkBox.clicked.connect(self.onSelectSchemeComboBox)
 
         self.listmodel = ListModel(self.ui.listView)
         self.ui.listView.setModel(self.listmodel)
