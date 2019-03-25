@@ -83,7 +83,7 @@
        <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>t0:</string>
+          <string>start:</string>
          </property>
         </widget>
        </item>
@@ -97,7 +97,7 @@
        <item>
         <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>t1:</string>
+          <string>end:</string>
          </property>
         </widget>
        </item>
