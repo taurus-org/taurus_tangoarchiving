@@ -27,7 +27,7 @@ import re
 import time
 import taurus
 from taurus.core.tango.tangodatabase import TangoAuthority
-from taurus.external.qt import Qt, QtCore
+from taurus.external.qt import Qt
 from taurus.qt.qtgui.panel import TaurusModelSelectorItem
 from taurus.qt.qtgui.util.ui import UILoadable
 from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
@@ -64,20 +64,24 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         self.ui.schema_comboBox.currentIndexChanged.connect(
             self.onSelectSchemeComboBox)
         self.ui.active_checkBox.clicked.connect(self.onSelectSchemeComboBox)
+        self.ui.ts_checkBox.clicked.connect(self.onSelectTsComboBox)
 
         self.listmodel = ListModel(self.ui.listView)
         self.ui.listView.setModel(self.listmodel)
 
-
         self.ui.listView.setDragDropMode(True)
 
-        self._toolbar = Qt.QToolBar("TangoSelector toolbar")
+        self._toolbar = Qt.QToolBar("Selector toolbar")
+        self._toolbar.setOrientation(Qt.Qt.Vertical)
         self._toolbar.setIconSize(Qt.QSize(16, 16))
         self._toolbar.setFloatable(False)
         self._addSelectedAction = self._toolbar.addAction(
             Qt.QIcon.fromTheme("list-add"), "Add selected", self.onAddSelected)
+        self._addSelectedActionXY = self._toolbar.addAction(
+            Qt.QIcon.fromTheme("list-add"), "Add XY selected",
+            self.onAddSelectedXY)
         self.ui.verticalLayout_4.addWidget(self._toolbar)
-        self.ui.verticalLayout_4.setAlignment(QtCore.Qt.AlignTop)
+        self.ui.verticalLayout_4.setAlignment(Qt.Qt.AlignTop)
 
         # TODO support drag and drop from listView
         # self.ui.listView.installEventFilter(self)
@@ -91,12 +95,19 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
     def onAddSelected(self):
         self.modelsAdded.emit(self.getSelectedModels())
 
+    def onAddSelectedXY(self):
+        self.modelsAdded.emit(self.getSelectedModels(xymodel=True))
+
     def setModel(self, model):
         TaurusModelSelectorItem.setModel(self, model)
         self._arch_auth = taurus.Authority(model)
         # Fill schemes
         schemas = self._arch_auth.getSchemas()
         self.ui.schema_comboBox.addItems(schemas)
+
+    def onSelectTsComboBox(self):
+        self._addSelectedActionXY.setEnabled(
+            not self.ui.ts_checkBox.isChecked())
 
     def onSelectSchemeComboBox(self):
         schema = self.ui.schema_comboBox.currentText()
@@ -125,7 +136,7 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
             else:
                 self.ui.listView.setRowHidden(row, True)
 
-    def getSelectedModels(self):
+    def getSelectedModels(self, xymodel=False):
         query = "db={0};t0={1};t1={2}"
         if self.ui.ts_checkBox.isChecked():
             query += ";ts"
@@ -148,15 +159,18 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
             try:
                 t0 = str2localtime(t0)
             except:
-                raise Exception("Invalid t0 time")
+                raise Exception("Invalid start time")
 
             try:
                 t1 = str2localtime(t1)
             except:
-                raise Exception("Invalid t1 time")
+                raise Exception("Invalid end time")
 
             query = query.format(schema, t0, t1)
             model = "{0}/{1}?{2}".format(self.model, attr, query)
+            if xymodel is True:
+                modelx = model + ";ts"
+                model = (modelx, model)
             models.append(model)
         return models
 
