@@ -30,7 +30,7 @@ from taurus.core.tango.tangodatabase import TangoAuthority
 from taurus.external.qt import Qt
 from taurus.qt.qtgui.panel import TaurusModelSelectorItem
 from taurus.qt.qtgui.util.ui import UILoadable
-from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
+from taurus_tangoarchiving.widget.tangoarchivingtools import TangoArchivingTimeSelector
 
 
 class ListModel(Qt.QStandardItemModel):
@@ -65,12 +65,9 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
             self.onSelectSchemeComboBox)
         self.ui.active_checkBox.clicked.connect(self.onSelectSchemeComboBox)
         self.ui.ts_checkBox.clicked.connect(self.onSelectTsComboBox)
-
         self.listmodel = ListModel(self.ui.listView)
         self.ui.listView.setModel(self.listmodel)
-
         self.ui.listView.setDragDropMode(True)
-
         self._toolbar = Qt.QToolBar("Selector toolbar")
         self._toolbar.setOrientation(Qt.Qt.Vertical)
         self._toolbar.setIconSize(Qt.QSize(16, 16))
@@ -82,15 +79,11 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
             self.onAddSelectedXY)
         self.ui.verticalLayout_4.addWidget(self._toolbar)
         self.ui.verticalLayout_4.setAlignment(Qt.Qt.AlignTop)
-
         # TODO support drag and drop from listView
         # self.ui.listView.installEventFilter(self)
         self.ui.lineEdit.textChanged.connect(self.filter)
-        self.ui.t0_dateTime.addItems(["-1h", "-1d", "-1w",
-                                      str2localtime("-1d")])
-        self.ui.t0_dateTime.setCurrentIndex(1)
-        self.ui.t1_dateTime.addItems(["", "-1h", "-1d", "-1w",
-                                      str2localtime(time.time())])
+        self.time_selector = TangoArchivingTimeSelector(self)
+        self.ui.horizontalLayout_4.addWidget(self.time_selector)
 
     def onAddSelected(self):
         self.modelsAdded.emit(self.getSelectedModels())
@@ -140,32 +133,13 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         query = "db={0};t0={1};t1={2}"
         if self.ui.ts_checkBox.isChecked():
             query += ";ts"
-
-        t0 = self.ui.t0_dateTime.currentText()
-        t1 = self.ui.t1_dateTime.currentText()
+        t0, t1 = self.time_selector.getTimes()
         schema = self.ui.schema_comboBox.currentText()
         selected = self.ui.listView.selectionModel().selectedIndexes()
         models = []
 
         for idx in selected:
             attr = self.listmodel.data(idx)
-
-            if len(t0) == 0:
-                return None
-
-            if len(t1) == 0:
-                t1 = time.time()
-
-            try:
-                t0 = str2localtime(t0)
-            except:
-                raise Exception("Invalid start time")
-
-            try:
-                t1 = str2localtime(t1)
-            except:
-                raise Exception("Invalid end time")
-
             query = query.format(schema, t0, t1)
             model = "{0}/{1}?{2}".format(self.model, attr, query)
             if xymodel is True:
@@ -194,7 +168,6 @@ if __name__ == '__main__':
     w = TangoArchivingModelSelectorItem()
     w.setModel(w.default_model)
 
-    w.addModels.connect(print_models)
     w.show()
     
     sys.exit(app.exec_())
