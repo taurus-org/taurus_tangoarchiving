@@ -85,7 +85,7 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
 
         # TODO support drag and drop from listView
         # self.ui.listView.installEventFilter(self)
-        self.ui.lineEdit.editingFinished.connect(self.filter)
+        self.ui.lineEdit.textChanged.connect(self.filter)
         self.ui.t0_dateTime.addItems(["-1h", "-1d", "-1w",
                                       str2localtime("-1d")])
         self.ui.t0_dateTime.setCurrentIndex(1)
@@ -123,7 +123,7 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         self.listmodel.addItems(attrs)
 
     def filter(self):
-        filter_text = str(self.ui.lineEdit.text()).lower()
+        filter_text = ".*" + str(self.ui.lineEdit.text()).lower() + ".*"
         for row, attr in enumerate(self.listmodel.models):
             try:
                 match = re.match(filter_text, attr)
