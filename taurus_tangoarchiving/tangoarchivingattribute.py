@@ -25,8 +25,10 @@
 
 __all__ = ["TangoArchivingAttribute"]
 
+import re
 import time
 import numpy as np
+import PyTangoArchiving as pta
 
 from taurus.core.units import Q_
 from taurus.core.taurusattribute import TaurusAttribute
@@ -106,16 +108,12 @@ class TangoArchivingAttribute(TaurusAttribute):
     # Necessary to overwrite
     #-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
     def encode(self, value):
-        v = np.array(value)
-        if len(v.shape) == 1:
-            self.data_format = DataFormat._1D
-        elif len(v.shape) == 2:
-            self.data_format = DataFormat._2D
+        value_dimension = len(np.shape(value))
+        self.data_format = DataFormat(value_dimension)
+        if self.isNumeric():
+            v = Q_(np.array(value, dtype=np.float))
         else:
-            raise Exception('Data structure is not supported')
-
-        if isinstance(v[0], (int, float)):
-            v = Q_(v)
+            v = np.array(value)
         return v
 
     def decode(self, attr_value):
@@ -141,7 +139,7 @@ class TangoArchivingAttribute(TaurusAttribute):
                                            self._end_date,
                                            decimate=True)
         t = TaurusTimeVal().now()
-
+        self.type = self.getType()
         if len(data) > 0:
             times, values = zip(*data)
             self._arch_values.rvalue = self.encode(values)
@@ -158,6 +156,30 @@ class TangoArchivingAttribute(TaurusAttribute):
             v = self._arch_values
 
         return v
+
+    def getType(self, cache=True):
+        if self.type is None:
+            reader = self.parent.getReader()
+            api = pta.api(reader.db_name)
+            _, _, pta_type = api.get_attr_id_type_table(self._tg_attr_name)
+            if re.match('.*short.*|.*long.*', pta_type):
+                self.type = DataType.Integer
+            elif re.match('.*state.*', pta_type):
+                self.type = DataType.DevState
+            elif re.match('.*float.*|.*double.*', pta_type):
+                self.type = DataType.Float
+            elif re.match('.*boolean.*', pta_type):
+                self.type = DataType.Boolean
+            elif re.match('.*string.*', pta_type):
+                self.type = DataType.String
+            elif re.match('.*uchar.*', pta_type):
+                self.type = DataType.Bytes
+            elif re.match('.*encoded.*', pta_type):
+                self.type = DataType.DevEncoded
+            elif re.match('.*enum.*', pta_type):
+                self.type = DataType.Object
+
+        return self.type
 
     def addListener(self, listener):
         added = TaurusAttribute.addListener(self, listener)
