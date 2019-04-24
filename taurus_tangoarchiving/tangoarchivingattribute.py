@@ -145,8 +145,8 @@ class TangoArchivingAttribute(TaurusAttribute):
             self._arch_values.rvalue = self.encode(values)
             self._arch_timestamps.rvalue = Q_(times, 's')
         else:
-            self._arch_values.rvalue = []
-            self._arch_timestamps.rvalue = []
+            self._arch_values.rvalue = np.array([])
+            self._arch_timestamps.rvalue = np.array([])
         self._arch_values.time = t
         self._arch_timestamps.time = t
 
