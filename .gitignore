@@ -3,5 +3,5 @@ MANIFEST
 *.pyc
 /build/
 /setup.cfg
-/*.egg-info
+/*.egg*
 .idea/
