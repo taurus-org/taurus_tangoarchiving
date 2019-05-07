@@ -6,6 +6,7 @@ This file follows the formats and conventions from [keepachangelog.com]
 ## [0.1.X]
 
 ### Added
+- Add tpgArchiving TaurusGui. Require taurus_pyqtgraph plugin
 - PoC for archiving model chooser widget + entry-point
 - Add entry-point to register the scheme
 - Add methods to get Attribute URIs
