@@ -170,7 +170,7 @@ def run():
         c = msi.cursor()
         msi.setCursor(Qt.Qt.WaitCursor)
 
-        plot.model_chooser_tool.addModels(models)
+        plot.addModels(models)
         updateAll()
         msi.setCursor(c)
 
