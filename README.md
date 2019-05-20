@@ -1,6 +1,6 @@
 # taurus_tangoarchiving
 
-This is a Taurus scheme that provides access to the Tango archiving system.
+This is a Taurus plugin that provides access to the Tango archiving system.
 It uses the [PyTangoArchiving](https://github.com/tango-controls/PyTangoArchiving)
 module. 
 
