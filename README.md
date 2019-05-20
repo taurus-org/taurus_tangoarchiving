@@ -1,4 +1,4 @@
-# archiving-scheme
+# taurus_tangoarchiving
 
 This is a Taurus scheme that provides access to the Tango archiving system.
 It uses the [PyTangoArchiving](https://github.com/tango-controls/PyTangoArchiving)
