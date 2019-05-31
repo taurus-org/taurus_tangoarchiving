@@ -68,16 +68,14 @@ class TangoArchivingAuthority(TaurusAuthority):
     def getArchivingProperties(self):
         # The archiving database configuration is defined in the tango database
         # as free property.
-        props = self._tangodb.get_property('PyTangoArchiving',
-                                           [self._tangodb, 'DbConfig'])
+        props = self._tangodb.get_property('PyTangoArchiving', ['DbConfig'])
         return props
 
     def getSchemas(self):
         """ Returns a list of configured archiving schemas"""
         # The archiving database configuration is defined in the tango database
         # as free property.
-        props = self._tangodb.get_property('PyTangoArchiving',
-                                           [self._tangodb, 'Schemas'])
+        props = self._tangodb.get_property('PyTangoArchiving', ['Schemas'])
         schemas = props.get('Schemas', [])
         if len(schemas) != 0:
             schemas.append('*')
