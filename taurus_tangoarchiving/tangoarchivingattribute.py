@@ -161,7 +161,11 @@ class TangoArchivingAttribute(TaurusAttribute):
         if self.type is None:
             reader = self.parent.getReader()
             api = pta.api(reader.db_name)
-            _, _, pta_type = api.get_attr_id_type_table(self._tg_attr_name)
+            try:
+                _, _, pta_type = api.get_attr_id_type_table(self._tg_attr_name)
+            except:
+                pta_type = 'float'
+            # TODO  AttributeError("'ArchivingAPI' object has no attribute 'get_attr_id_type_table'
             if re.match('.*short.*|.*long.*', pta_type):
                 self.type = DataType.Integer
             elif re.match('.*state.*', pta_type):
