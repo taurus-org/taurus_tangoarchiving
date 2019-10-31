@@ -80,7 +80,7 @@ class TangoArchivingDeviceNameValidator(TaurusDeviceNameValidator):
     scheme = 'tgarch'
     authority = TangoArchivingAuthorityNameValidator.authority
     path = r''
-    query = r'db(=(?P<arch_db>(hdb|hdblite|tdb|tdbpp|rad2s|rad10s|snap|hdbpp|\*)))?'
+    query = r'db(=(?P<arch_db>((\w)+|\*)))?'
     fragment = '(?!)'
 
     pattern = r'^(?P<scheme>%(scheme)s):' + \

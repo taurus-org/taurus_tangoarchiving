@@ -83,9 +83,6 @@ class ArchivingAuthValidatorTestCase(AbstractNameValidatorTestCase,
 @invalid(name='tgarch:?')
 @invalid(name='tgarch:?foo')
 ##
-## invalid db foo
-@invalid(name='tgarch:?db=foo')
-##
 @invalid(name='tgarch:foo')
 @invalid(name='tgarch:tdbpp#')
 @names(name='tgarch:?db=hdb',
