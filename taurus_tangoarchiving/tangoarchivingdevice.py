@@ -48,6 +48,10 @@ class TangoArchivingDevice(TaurusDevice):
         """
         return self._reader
 
+    def getArchivingSchemas(self):
+        """Returns a list of the configured archiving schemas"""
+        return self.getReader().configs.keys()
+
     def getAttribute(self, attrname):
         """Returns the attribute object given its name"""
         attrname = "%s/%s" % (self.getFullName(), attrname)
