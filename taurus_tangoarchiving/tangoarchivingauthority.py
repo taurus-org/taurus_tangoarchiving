@@ -28,10 +28,10 @@ __all__ = ["TangoArchivingAuthority"]
 import taurus
 import socket
 import PyTango
+from PyTangoArchiving import Schemas
 from taurus.core.taurusauthority import TaurusAuthority
 from taurus.core.taurusexception import TaurusException
 from tangoarchivingvalidator import TangoArchivingAuthorityNameValidator
-
 
 class TangoArchivingAuthority(TaurusAuthority):
     '''
@@ -65,18 +65,17 @@ class TangoArchivingAuthority(TaurusAuthority):
         except PyTango.DevFailed:
             raise TaurusException('Can not connect to the tango database')
 
-    def getArchivingProperties(self):
+    def getArchivingProperties(self, schema = None):
         # The archiving database configuration is defined in the tango database
-        # as free property.
-        props = self._tangodb.get_property('PyTangoArchiving', ['DbConfig'])
-        return props
+        # as free property, and parsed by the PyTangoArchiving.Schemas api.
+        if schema is None:
+            schema = Schemas.keys()[0]
+        return Schemas.getSchema(schema)
 
     def getSchemas(self):
         """ Returns a list of configured archiving schemas"""
         # The archiving database configuration is defined in the tango database
-        # as free property.
-        props = self._tangodb.get_property('PyTangoArchiving', ['Schemas'])
-        schemas = props.get('Schemas', [])
-        if len(schemas) != 0:
-            schemas.append('*')
+        # as free property, and parsed by the PyTangoArchiving.Schemas api.
+        schemas = list(Schemas.keys())
+        schemas.insert(0,'*')
         return schemas
