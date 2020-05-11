@@ -133,11 +133,10 @@ class TangoArchivingAttribute(TaurusAttribute):
 
     def _read(self):
         reader = self.parent.getReader()
-
         data = reader.get_attribute_values(self._tg_attr_name,
-                                           self._start_date,
-                                           self._end_date,
-                                           decimate=True)
+                                    self._start_date,
+                                    self._end_date,
+                                    decimate=True)
         t = TaurusTimeVal().now()
         self.type = self.getType()
         if len(data) > 0:
