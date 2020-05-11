@@ -27,7 +27,7 @@ import re
 import time
 from taurus.external.qt import Qt
 from taurus.qt.qtgui.util.ui import UILoadable
-from fandango.functional import str2time
+from fandango.functional import str2time, clmatch, clsearch
 from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
 
 @UILoadable(with_ui='ui')

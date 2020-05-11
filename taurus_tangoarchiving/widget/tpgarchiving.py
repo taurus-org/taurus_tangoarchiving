@@ -35,6 +35,10 @@ from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
 from taurus_tangoarchiving.widget.tangoarchivingmodelchooser import TangoArchivingModelSelectorItem
 from taurus.core.taurushelper import getValidatorFromName
 
+import fandango
+import fandango.qt
+from operator import isSequenceType
+
 try:
     from taurus.qt.qtgui.tpg import (TaurusPlot,
                                      DateAxisItem,
@@ -56,8 +60,28 @@ def run():
 
     app = TaurusApplication(app_name='tpgArchiving')
     gui = TaurusGui()
+    gui.setWindowTitle('Taurus Archiving Plot')
     plot = TaurusPlot()
-
+    
+    #class MyPlot(TaurusPlot):
+        #pass
+        
+        ##def dropEvent(self, event):
+            ##print('In dropEvent(%s)' % str(dir(event)))
+        ##def dragMoveEvent(self,event):
+            ##print('Dragging ...')
+            ##event.acceptProposedAction()
+        ##def dragEnterEvent(self,event):
+            ##print('Entering ...')
+            ##event.acceptProposedAction()
+            
+    #plot = MyPlot()
+    #plot.setAcceptDrops(True)
+    #plot = fandango.qt.Dropable(TaurusPlot)()
+    #plot.setDropLogger(fandango.printf)
+    #plot.setSupportedMimeTypes(fandango.qt.MIMETYPES)
+    
+    plot.setBackgroundBrush(Qt.QColor('white'))
     axis = DateAxisItem(orientation='bottom')
     plot_items = plot.getPlotItem()
 
@@ -106,7 +130,7 @@ def run():
     # Legend
     ###########################################################################
     gv = Qt.QGraphicsView(Qt.QGraphicsScene())
-    gv.setBackgroundBrush(Qt.QBrush(Qt.QColor('black')))
+    gv.setBackgroundBrush(Qt.QBrush(Qt.QColor('white')))
     l = pg.LegendItem(None, offset=(0, 0))
     gv.scene().addItem(l)
 
@@ -164,18 +188,28 @@ def run():
     # onAddXYModel
     ###########################################################################
 
-    def onAddXYModel(models):
+    def onAddXYModel(models=None):
         # Update progress bar
         # updateProgressBar(False)
+        print('onAddXYModel(%s)'%models)
+        if not isSequenceType(models):
+            print('Overriding models ...')
+            models = msi.getSelectedModels()
+            
         c = msi.cursor()
         msi.setCursor(Qt.Qt.WaitCursor)
-
+        current = plot._model_chooser_tool.getModelNames()
+        print('current: %s' % str(current))
+        models = [m for m in models if m not in current]
+        print('new models: %s' % str(models))
         plot.addModels(models)
         updateAll()
         msi.setCursor(c)
 
     # Connect button
     msi.modelsAdded.connect(onAddXYModel)
+    
+    #plot.setDropEventCallback(onAddXYModel)
 
     ###########################################################################
     # Override TaurusGui close event

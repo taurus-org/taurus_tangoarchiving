@@ -28,9 +28,10 @@ import time
 import taurus
 from taurus.core.tango.tangodatabase import TangoAuthority
 from taurus.external.qt import Qt
-from taurus.qt.qtgui.panel import TaurusModelSelectorItem
+from taurus.qt.qtgui.panel import TaurusModelSelectorItem, TaurusForm
 from taurus.qt.qtgui.util.ui import UILoadable
-from taurus_tangoarchiving.widget.tangoarchivingtools import TangoArchivingTimeSelector
+from taurus_tangoarchiving.widget.tangoarchivingtools import (
+    TangoArchivingTimeSelector, clmatch, clsearch)
 
 
 class ListModel(Qt.QStandardItemModel):
@@ -79,11 +80,43 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
             self.onAddSelectedXY)
         self.ui.verticalLayout_4.addWidget(self._toolbar)
         self.ui.verticalLayout_4.setAlignment(Qt.Qt.AlignTop)
+        
         # TODO support drag and drop from listView
         # self.ui.listView.installEventFilter(self)
         self.ui.lineEdit.textChanged.connect(self.filter)
         self.time_selector = TangoArchivingTimeSelector(self)
         self.ui.horizontalLayout_4.addWidget(self.time_selector)
+        
+        import types
+        def override_mousePressEvent(widget, button, callback):
+            old_hook = widget.mousePressEvent
+            def mousePressEvent(obj, event):
+                if event.button() == button:
+                    callback(obj, event)
+                old_hook(event)
+            widget.mousePressEvent = types.MethodType(mousePressEvent, widget)
+            
+        override_mousePressEvent(self.ui.listView, 
+                                 Qt.Qt.RightButton, self.onContextMenu)
+        
+    def onShowCurrentValues(self):
+        models = self.getSelectedModels()
+        print(list(map(str,models)))
+        form = TaurusForm()
+        form.addModels(models)
+        form.show()
+        
+    def onContextMenu(self, widget, event):
+        if not hasattr(self,'_contextMenu'):
+            self._contextMenu = Qt.QMenu()
+            self._contextMenu.addAction(Qt.QIcon(), #.fromTheme("list-add"), 
+                "Add XY selected", self.onAddSelectedXY)
+            self._contextMenu.addAction(Qt.QIcon(),
+                "Show Current Values", self.onShowCurrentValues)
+            
+        if len(self.getSelectedModels()):
+            point = event.pos()
+            self._contextMenu.exec_(widget.mapToGlobal(point))    
 
     def onAddSelected(self):
         self.modelsAdded.emit(self.getSelectedModels())
@@ -116,10 +149,10 @@ class TangoArchivingModelSelectorItem(TaurusModelSelectorItem):
         self.listmodel.addItems(attrs)
 
     def filter(self):
-        filter_text = ".*" + str(self.ui.lineEdit.text()).lower() + ".*"
+        filter_text = str(self.ui.lineEdit.text()).lower()
         for row, attr in enumerate(self.listmodel.models):
             try:
-                match = re.match(filter_text, attr)
+                match = clsearch(filter_text, attr)
             except Exception as e:
                 print(e)
                 return
