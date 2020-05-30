@@ -321,7 +321,7 @@ def main(*args):
     usage attr1, attr2, attr3, ..., t0, t1
     """
     try:
-        assert len(args) >  3
+        assert len(args) >  2
         t0,t1 = args[-2],args[-1]
         models = args[:-2]
         ArchivingWidget.run(models,t0,t1)
