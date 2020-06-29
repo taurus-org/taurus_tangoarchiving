@@ -37,7 +37,7 @@ authors = 'cfalcon'
 email = 'cfalcon@cells.es'
 url = 'http://www.taurus-scada.org/en/stable/devel/core_tutorial.html'
 
-install_requires = ['taurus>=4.5.3-alpha',
+install_requires = ['taurus>=4.6.5-alpha',
                     'pytangoarchiving']
 
 tgarch_ms_item = ('TangoArchiving = taurus_tangoarchiving.widget.'
@@ -48,7 +48,7 @@ tpgarchiving = 'taurus_tangoarchiving.widget.tpgarchiving:run'
 
 entry_points = {
     'taurus.core.schemes': ['taurus_tangoarchiving = taurus_tangoarchiving',],
-    'taurus.qt.qtgui.panel.TaurusModelSelector.items': [tgarch_ms_item,],
+    'taurus.model_selector.items': [tgarch_ms_item,],
     'console_scripts': ['tpgarchiving = {}'.format(tpgarchiving)]
 }
 
