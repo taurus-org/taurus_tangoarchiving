@@ -33,6 +33,7 @@ from taurus.qt.qtgui.container import TaurusMainWindow, TaurusWidget
 from taurus_tangoarchiving.tangoarchivingvalidator import TangoArchivingAttributeNameValidator
 from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
 from taurus_tangoarchiving.widget.tangoarchivingmodelchooser import TangoArchivingModelSelectorItem
+from taurus_tangoarchiving.widget.tangoarchivingtools import TangoArchivingTimeSelector
 from taurus.core.taurushelper import getValidatorFromName
 
 import fandango
@@ -59,6 +60,7 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
         self.legend = ArchivingLegend(self.plot)
         self.modelchooser = None
         self.plot.updateSig[bool,bool].connect(self.updateAll)
+        self.t0,self.t1 = 0,0
         msi = self.modelchooser
         if msi:
             # Connect button
@@ -69,11 +71,24 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
         
         self.info('building layout')
         self.setLayout(Qt.QVBoxLayout())
-        #l1 = Qt.QHBoxLayout()
+        self.tc = TangoArchivingTimeSelector()
+
         l1 = Qt.QSplitter()
         l1.addWidget(self.plot)
+        self.plot.setTimeChooser(self.tc)
         l1.addWidget(self.legend)
-        self.layout().addWidget(l1)
+
+        l0 = Qt.QWidget()
+        l0.setLayout(Qt.QHBoxLayout())
+        l0.layout().addWidget(self.tc)
+        
+        self.refresh = Qt.QPushButton(Qt.QIcon.fromTheme("view-refresh"),
+                            "refresh tgarch curves")
+        self.refresh.clicked.connect(self.onRefresh)
+        
+        self.layout().addWidget(l0)
+        l0.layout().addWidget(self.refresh)
+        self.layout().addWidget(l1,10)
         self.layout().addWidget(self.pb)        
         
         self.updateProgressBar()
@@ -92,7 +107,7 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
     def setTimes(self,t0,t1):
         pass
     
-    def addXYModels(self,attrs,t0,t1):
+    def addXYModels(self,attrs,t0=None,t1=None):
         """
         Convert model, dates to 
         'tgarch://alba03.cells.es:10000/sr/id/scw01/pressure?db=*;t0=2019-11-11T11:41:59;t1=2020-01-03T09:03:03;ts',
@@ -100,11 +115,16 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
         c = self.cursor()
         self.setCursor(Qt.Qt.WaitCursor)
         attrs = fn.toList(attrs)
-        t0 = t0 if fn.isNumber(t0) else fn.str2time(t0)
-        t1 = t1 if fn.isNumber(t1) else fn.str2time(t1)
-        self.t0,self.t1 = fn.time2str(t0,iso=1),fn.time2str(t1,iso=1)
-        self.t0 = self.t0.replace(' ','T')
-        self.t1 = self.t1.replace(' ','T')
+
+        if not t0 and not t1 and not self.t0 and not self.t1:
+            t0,t1 = self.tc.getTimes()
+
+        if t0 and t1:
+            t0 = t0 if fn.isNumber(t0) else fn.str2time(t0,relative=True)
+            t1 = t1 if fn.isNumber(t1) else fn.str2time(t1,relative=True)
+            self.t0,self.t1 = fn.time2str(t0,iso=1),fn.time2str(t1,iso=1)
+            self.t0 = self.t0.replace(' ','T')
+            self.t1 = self.t1.replace(' ','T')
         
         ms = []
         for attr in attrs:
@@ -117,6 +137,8 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
         self.plot.onAddXYModel(ms)
         self.setCursor(c)
         
+    addModels = addXYModels #For backwards compatibility
+        
     def getTimes(self):
         return self.t0,self.t1
         
@@ -127,11 +149,11 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
     def onRefresh(self):
         # Update progress bar
         self.updateProgressBar(False)
-        t1 = threading.Thread(target=_onRefresh)
+        t1 = threading.Thread(target=self._onRefresh)
         t1.start()
 
     def _onRefresh(self):
-        t0, t1 = self.getTimes() #msi.time_selector.getTimes()
+        t0, t1 = self.tc.getTimes()
         # Validate models
         v = TangoArchivingAttributeNameValidator()
         query = "{0};t0={1};t1={2}"
@@ -171,7 +193,10 @@ class ArchivingWidget(TaurusWidget): #Qt.QWidget
         print('updateAll(%s,%s)' % (legend,stop))
         # Update legend
         if legend is True:
-            self.legend.updateExternalLegend()
+            try:
+                self.legend.updateExternalLegend()
+            except:
+                traceback.print_exc()
 
         # run plot auto range
         time.sleep(0.2)  # Wait till models are loading
@@ -187,7 +212,8 @@ class ArchivingPlot(TaurusPlot):
 
         TaurusPlot.__init__(self)
         plot = self
-        plot.setBackgroundBrush(Qt.QColor('white'))
+        #plot.setBackgroundBrush(Qt.QColor('white'))
+        self.time_selector = None
         axis = self.axis = DateAxisItem(orientation='bottom')
         plot_items = self.plot_items = plot.getPlotItem()
 
@@ -239,17 +265,23 @@ class ArchivingPlot(TaurusPlot):
         t0s = str2localtime(t0)
         t1s = str2localtime(t1)
         
-        self.updateTimeChooser(t0s,t1s)
+        print('times: %s(%s) - %s(%s)' % (t0,t0s,t1,t1s))
+        if t0s and t1s:
+            self.updateTimeChooser(t0s,t1s)
+        
+    def setTimeChooser(self,time_selector):
+        self.time_selector = time_selector
         
     def updateTimeChooser(self, t0s, t1s):
-        msi = getattr(self,'msi',None)
-        if msi:
-            msi.time_selector.ui.comboBox_begin.setItemText(5, t0s)
-            msi.time_selector.ui.comboBox_end.setItemText(7, t1s)
-            msi.time_selector.ui.comboBox_begin.setItemText(5, t0s)
-            msi.time_selector.ui.comboBox_end.setItemText(7, t1s)
-            msi.time_selector.ui.comboBox_begin.setCurrentIndex(5)
-            msi.time_selector.ui.comboBox_end.setCurrentIndex(7)
+        if self.time_selector:
+            self.time_selector.ui.comboBox_begin.setItemText(5, t0s)
+            self.time_selector.ui.comboBox_end.setItemText(7, t1s)
+            
+            self.time_selector.ui.comboBox_begin.setItemText(5, t0s)
+            self.time_selector.ui.comboBox_end.setItemText(7, t1s)
+            
+            self.time_selector.ui.comboBox_begin.setCurrentIndex(5)
+            self.time_selector.ui.comboBox_end.setCurrentIndex(7)
         else:
             print('No time chooser widget defined')
 
