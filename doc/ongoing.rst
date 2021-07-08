@@ -1,86 +1,17 @@
-#!/usr/bin/env python
+=====================================
+Notes on integration with ctarchiving
+=====================================
 
-#############################################################################
-##
-# This file is part of Taurus
-##
-# http://taurus-scada.org
-##
-# Copyright 2011 CELLS / ALBA Synchrotron, Bellaterra, Spain
-##
-# Taurus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-##
-# Taurus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-##
-# You should have received a copy of the GNU Lesser General Public License
-# along with Taurus.  If not, see <http://www.gnu.org/licenses/>.
-##
-#############################################################################
+To launch tpgarchiving:
+ 
+  python taurus_tangoarchiving/widget/tpgarchiving.py 
 
-import time
-import threading
-from taurus.external.qt import Qt
-import pyqtgraph as pg
-from taurus.qt.qtgui.application import TaurusApplication
-from taurus.qt.qtgui.taurusgui import TaurusGui
-from taurus.qt.qtgui.container import TaurusMainWindow
-from taurus_tangoarchiving.tangoarchivingvalidator import TangoArchivingAttributeNameValidator
-from taurus_tangoarchiving.tangoarchivingvalidator import str2localtime
-from taurus_tangoarchiving.widget.tangoarchivingmodelchooser import TangoArchivingModelSelectorItem
-from taurus.core.taurushelper import getValidatorFromName
+Trend Widget API on ctarchiving
+-------------------------------
 
-import fandango
-import fandango.qt
-from operator import isSequenceType
+.. code::
 
-try:
-    from taurus.qt.qtgui.tpg import (TaurusPlot,
-                                     DateAxisItem,
-                                     TaurusPlotDataItem)
-    from taurus.qt.qtgui.tpg.curvesmodel import TaurusItemConf
-except ImportError:
-    raise Exception('Missing dependency: taurus_pyqtgraph')
-
-
-def run():
-    # Simplify TaurusGui
-    TaurusGui.TAURUS_MENU_ENABLED = False
-    TaurusGui.TOOLS_MENU_ENABLED = False
-    TaurusGui.HELP_MENU_ENABLED = False
-    TaurusGui.FULLSCREEN_TOOLBAR_ENABLED = False
-    TaurusGui.PANELS_MENU_ENABLED = False
-    TaurusGui.APPLETS_TOOLBAR_ENABLED = False
-    TaurusGui.QUICK_ACCESS_TOOLBAR_ENABLED = False
-
-    app = TaurusApplication(app_name='tpgArchiving')
-    gui = TaurusGui()
-    gui.setWindowTitle('Taurus Archiving Plot')
     plot = TaurusPlot()
-    
-    #class MyPlot(TaurusPlot):
-        #pass
-        
-        ##def dropEvent(self, event):
-            ##print('In dropEvent(%s)' % str(dir(event)))
-        ##def dragMoveEvent(self,event):
-            ##print('Dragging ...')
-            ##event.acceptProposedAction()
-        ##def dragEnterEvent(self,event):
-            ##print('Entering ...')
-            ##event.acceptProposedAction()
-            
-    #plot = MyPlot()
-    #plot.setAcceptDrops(True)
-    #plot = fandango.qt.Dropable(TaurusPlot)()
-    #plot.setDropLogger(fandango.printf)
-    #plot.setSupportedMimeTypes(fandango.qt.MIMETYPES)
-    
     plot.setBackgroundBrush(Qt.QColor('white'))
     axis = DateAxisItem(orientation='bottom')
     plot_items = plot.getPlotItem()
@@ -89,14 +20,7 @@ def run():
     # TODO (cleanup menu actions)
     if plot_items.legend is not None:
         plot_items.legend.hide()
-
-    msi = TangoArchivingModelSelectorItem()
-    # hide time stamp selector
-    msi.ui.ts_checkBox.setVisible(False)
-    # hide add single Y model
-    msi._addSelectedAction.setVisible(False)
-    msi.setModel(msi.default_model)
-    # progress bar
+        
     pb = Qt.QProgressBar()
     pb.setGeometry(0, 0, 300, 25)
 
@@ -108,6 +32,9 @@ def run():
         pb.setRange(0, final)
 
     updateProgressBar()
+    
+            
+
     ###########################################################################
     # Update t0 and t1 based on sigXRangeChanged
     ###########################################################################
@@ -125,7 +52,9 @@ def run():
 
     vb = plot.getPlotItem().getViewBox()
     vb.sigXRangeChanged.connect(onUpdateXViewRange)
-
+    
+    
+    
     ###########################################################################
     # Legend
     ###########################################################################
@@ -141,8 +70,7 @@ def run():
         for dataitem in plot_items.listDataItems():
             if dataitem.name():
                 l.addItem(dataitem, dataitem.name())
-
-
+                
     ###########################################################################
     # Connect CurvesAppearanceChooser to external legend
     ###########################################################################
@@ -170,7 +98,7 @@ def run():
 
     # Override CurvesAppearanceChooser.onApply
     CurvesAppearanceChooser.onApply = onApply
-
+    
     ###########################################################################
     # Helper
     ###########################################################################
@@ -208,39 +136,6 @@ def run():
 
     # Connect button
     msi.modelsAdded.connect(onAddXYModel)
-    
-    #plot.setDropEventCallback(onAddXYModel)
-
-    ###########################################################################
-    # Override TaurusGui close event
-    ###########################################################################
-    def closeEvent(self, event):
-        try:
-            self.__macroBroker.removeTemporaryPanels()
-        except:
-            pass
-        TaurusMainWindow.closeEvent(self, event)
-        for n, panel in self._TaurusGui__panels.items():
-            panel.closeEvent(event)
-            panel.widget().closeEvent(event)
-            if not event.isAccepted():
-                result = Qt.QMessageBox.question(
-                    self, 'Closing error',
-                    "Panel '%s' cannot be closed. Proceed closing?" % n,
-                    Qt.QMessageBox.Yes | Qt.QMessageBox.No)
-                if result == Qt.QMessageBox.Yes:
-                    event.accept()
-                else:
-                    break
-
-        for curve in plot_items.listDataItems():
-            plot.removeItem(curve)
-            l.removeItem(curve.name())
-        gui.saveSettings()
-
-    # Override TaurusGui close event
-    TaurusGui.closeEvent = closeEvent
-
     ###########################################################################
     # Create tgarch tool bar
     ###########################################################################
@@ -273,24 +168,14 @@ def run():
         updateProgressBar(False)
         t1 = threading.Thread(target=_onRefresh)
         t1.start()
+        
+PyQtGraph API on tpgarchiving
+-----------------------------
 
-    tgarchToolBar = gui.addToolBar("TgArch")
-    tgarchToolBar.addAction(Qt.QIcon.fromTheme("view-refresh"),
-                            "refresh tgarch curves", onRefresh)
+.. code::
 
-    ###########################################################################
-    # Create panels
-    ###########################################################################
-    gui.createPanel(plot, 'Plot')
-    gui.createPanel(msi, 'Chooser')
-    gui.createPanel(pb, 'Progress bar')
-    gui.createPanel(gv, 'Legend')
-    # Load configuration
-    gui.loadSettings()
-    gui.show()
-
-    app.exec_()
-
-
-if __name__ == '__main__':
-    run()
+            from taurus.qt.qtgui.plot import TaurusTrend
+            from PyTangoArchiving.widget.trend import ArchivingTrend,ArchivingTrendWidget
+            self.trend = ArchivingTrendWidget() #TaurusArchivingTrend()
+            self.trend.setUseArchiving(True)
+            self.trend.showLegend(True)
